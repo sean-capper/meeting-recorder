@@ -49,7 +49,7 @@
           {% if user.is_authenticated %}
           <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle text-capitalize" href="#" id="accountDropdown" data-toggle="dropdown" aria-haspopup="true"
-                aria-expanded="false">{{ user }}</a>
+                aria-expanded="false">{{ user.first_name }} {{user.last_name }}</a>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="accountDropdown">
                 <a class="dropdown-item" href="/logout/">Log out</a>
               </div>
