@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block links %}
+{% load static %}
+{% endblock %}
+
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+    <h1 class="display-4">Welcome, <span class='text-primary'>{{ user.first_name }} {{ user.last_name }}</span>.</h1>
+    <!-- <p class="lead">Quickly and effortlessly create meetings and invite your colleagues. Keep track of everything that happens during your meetings. Log in or Register and start keeping records!</p> -->
+</div>
+<div class="container">
+<div class="card-deck mb-3 text-center">
+  <div class="card mb-4 box-shadow">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Organize</h4>
+    </div>
+    <div class="card-body">
+        <h1 class="card-title pricing-card-title">Start a Meeting</h1>
+        <p class='text-body mt-3 mb-4'>
+            Start a meeting and distribute the invite link to whoever you'd like.
+        </p>
+    </div>
+    <div class="card-footer">
+        <button type="button" class="btn btn-lg btn-block btn-primary" data-toggle="modal" data-target="#exampleModalCentered">Start Meeting</button>
+    </div>
+  </div>
+  <div class="card mb-4 box-shadow">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Particpate</h4>
+    </div>
+    <div class="card-body">
+        <h1 class="card-title pricing-card-title">Join a Meeting</h1>
+        <p class='text-body mt-3 mb-4'>
+            Join an active meeting using the invite link provided by the organizer.
+        </p>          
+    </div>
+    <div class="card-footer">
+        <a class="btn btn-lg btn-block btn-primary" href='/register/'>Join Meeting</a>
+    </div>
+  </div>
+</div>
+{% else %}
+    <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+            <h1 class="display-4">Meeting Recorder</h1>
+            <p class="lead">Quickly and effortlessly create meetings and invite your colleagues. Keep track of everything that happens during your meetings. Log in or Register and start keeping records!</p>
+    </div>
+      <div class="container">
+        <div class="card-deck mb-3 text-center">
+          
+          <div class="card mb-4 box-shadow">
+            <div class="card-header">
+              <h4 class="my-0 font-weight-normal">Returning Users</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title pricing-card-title">Log In</h1>
+                <p class='text-body mt-3 mb-4'>
+                    Log in with your email and get right to a meeting, or start your own.
+                </p>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn btn-lg btn-block btn-primary" data-toggle="modal" data-target="#exampleModalCentered">Log in</button>
+            </div>
+          </div>
+          <div class="card mb-4 box-shadow">
+            <div class="card-header">
+              <h4 class="my-0 font-weight-normal">First Time Users</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title pricing-card-title">Register</h1>
+                <p class='text-body mt-3 mb-4'>
+                    Register using your email, name, and phone number to get started participating in meetings right away!
+                </p>          
+            </div>
+            <div class="card-footer">
+                <a class="btn btn-lg btn-block btn-primary" href='/register/'>Register</a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+  
+        <footer class="pt-4 my-md-5 pt-md-5 border-top">
+          <div class="row">
+            <div class="col-12 col-md">
+              <img class="mb-2" src="https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg" alt="" width="24" height="24">
+              <small class="d-block mb-3 text-muted">&copy; 2017-2018</small>
+            </div>
+            <div class="col-6 col-md">
+              <h5>Features</h5>
+              <ul class="list-unstyled text-small">
+                <li><a class="text-muted" href="#">Cool stuff</a></li>
+                <li><a class="text-muted" href="#">Random feature</a></li>
+                <li><a class="text-muted" href="#">Team feature</a></li>
+                <li><a class="text-muted" href="#">Stuff for developers</a></li>
+                <li><a class="text-muted" href="#">Another one</a></li>
+                <li><a class="text-muted" href="#">Last time</a></li>
+              </ul>
+            </div>
+            <div class="col-6 col-md">
+              <h5>Resources</h5>
+              <ul class="list-unstyled text-small">
+                <li><a class="text-muted" href="#">Resource</a></li>
+                <li><a class="text-muted" href="#">Resource name</a></li>
+                <li><a class="text-muted" href="#">Another resource</a></li>
+                <li><a class="text-muted" href="#">Final resource</a></li>
+              </ul>
+            </div>
+            <div class="col-6 col-md">
+              <h5>About</h5>
+              <ul class="list-unstyled text-small">
+                <li><a class="text-muted" href="#">Team</a></li>
+                <li><a class="text-muted" href="#">Locations</a></li>
+                <li><a class="text-muted" href="#">Privacy</a></li>
+                <li><a class="text-muted" href="#">Terms</a></li>
+              </ul>
+            </div>
+          </div>
+        </footer>
+      </div>
+  
+{% endblock %}
