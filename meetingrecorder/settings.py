@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'channels', # need this to establish connections for meeting rooms
     'meeting',
     'login',
     'crispy_forms',
@@ -72,6 +73,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'meetingrecorder.wsgi.application'
+ASGI_APPLICATION = 'meetingrecorder.routing.application'
 
 
 # Database
@@ -129,3 +131,13 @@ STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = 'login.User'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+# this stores meeting instances on the same server that hosts the database
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('192.241.143.158', 6379)],
+        },
+    },
+}

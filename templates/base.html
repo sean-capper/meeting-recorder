@@ -64,7 +64,7 @@
       <button class="btn btn-sm btn-outline-primary mr-md-2 my-1" data-toggle="modal" data-target="#exampleModalCentered">Log in</button>
       <a class="btn btn-sm btn-outline-primary mr-md-2 my-1" href="/register/">Register</a>
       {% else %}
-      <span class='mr-md-2'>{{ user.first_name }} {{ user.last_name }} </span>
+      <span class='text-primary mr-md-2'>{{ user.first_name }} {{ user.last_name }} </span>
       <a class="btn btn-sm btn-outline-primary mr-md-2 my-1" href="/logout/">Log out</a>
       {% endif %}
     </div>

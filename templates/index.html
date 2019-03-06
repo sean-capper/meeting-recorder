@@ -7,7 +7,41 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+    <h1 class="display-4">Welcome, <span class='text-primary'>{{ user.first_name }} {{ user.last_name }}</span>.</h1>
+    <!-- <p class="lead">Quickly and effortlessly create meetings and invite your colleagues. Keep track of everything that happens during your meetings. Log in or Register and start keeping records!</p> -->
+</div>
+<div class="container">
+<div class="card-deck mb-3 text-center">
+  <div class="card mb-4 box-shadow">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Organize</h4>
+    </div>
+    <div class="card-body">
+        <h1 class="card-title pricing-card-title">Start a Meeting</h1>
+        <p class='text-body mt-3 mb-4'>
+            Start a meeting and distribute the invite link to whoever you'd like.
+        </p>
+    </div>
+    <div class="card-footer">
+        <button type="button" class="btn btn-lg btn-block btn-primary" data-toggle="modal" data-target="#exampleModalCentered">Start Meeting</button>
+    </div>
+  </div>
+  <div class="card mb-4 box-shadow">
+    <div class="card-header">
+      <h4 class="my-0 font-weight-normal">Particpate</h4>
+    </div>
+    <div class="card-body">
+        <h1 class="card-title pricing-card-title">Join a Meeting</h1>
+        <p class='text-body mt-3 mb-4'>
+            Join an active meeting using the invite link provided by the organizer.
+        </p>          
+    </div>
+    <div class="card-footer">
+        <a class="btn btn-lg btn-block btn-primary" href='/register/'>Join Meeting</a>
+    </div>
+  </div>
+</div>
 {% else %}
     <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
             <h1 class="display-4">Meeting Recorder</h1>
