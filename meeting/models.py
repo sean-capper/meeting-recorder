@@ -10,6 +10,7 @@ class Meeting(models.Model):
     descripton = models.CharField(max_length=100)
     organizer = models.ForeignKey(User, related_name='user_id_set', on_delete=models.CASCADE)
     members = models.ManyToManyField(User, through='Relate')
+    url = models.CharField(max_length=128, default='DEFAULT')
 
 class Relate(models.Model):
     meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE)

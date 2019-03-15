@@ -49,25 +49,11 @@
     // might not need meetingID?
     var meetingID = 1;//{{ meeting_id }}
 
-
-    // <li class="message my-3 p-4 shadow-sm rounded">
-    //     <div class="row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2">
-    //         <div class="user-info col-3 d-flex">
-    //             <img class="rounded-circle" src="https://ui-avatars.com/api/?name=Sean+Capper&amp;rounded=true&amp;size=64"
-    //                 style="width: 32px; height: 32px;"><span class="align-self-center ml-2">Martin V.</span>
-    //         </div>
-    //         <div class="offset-7 col-2 chat-time text-right text-muted pull-right">10:45 PM</div>
-    //     </div>
-    //     <div class='row'>
-    //         <div class="message-body col-12">Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. </div>
-    //     </div>
-    // </li>
-
     // create a message that will be displayed in the browser
     function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp) {
         var chatList = document.querySelector('#chat-list');
         var message = $('<li></li>', {
-            class: 'message my-3 p-4 shadow-sm rounded',
+            class: 'message my-3 p-4 shadow rounded',
         });
         var row1 = $('<div></div>', {
             class: 'row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2'

@@ -7,9 +7,37 @@
 
 {% block content %}
 {% if user.is_authenticated %}
+
+<script>
+
+  function searchOpen() {
+    var search = $('#emailSearch').val()
+    // if(search.length >= 2) {
+      var data = {
+        search: search
+      };
+      $.ajax({
+        url: '/search.json',
+        data: data,
+        dataType: 'jsonp',
+        jsonp: 'callback',
+        jsonpCallback: 'searchResult'
+      });
+    // }
+  }
+
+  function searchResult(data) {
+    console.log(data);
+    $('#emailSearch').autocomplete({
+      appendTo: '#searchResults',
+      source: data
+    });
+  }
+</script>
+
+
 <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
     <h1 class="display-4">Welcome, <span class='text-primary'>{{ user.first_name }} {{ user.last_name }}</span>.</h1>
-    <!-- <p class="lead">Quickly and effortlessly create meetings and invite your colleagues. Keep track of everything that happens during your meetings. Log in or Register and start keeping records!</p> -->
 </div>
 <div class="container">
 <div class="card-deck mb-3 text-center">
@@ -24,7 +52,7 @@
         </p>
     </div>
     <div class="card-footer">
-        <button type="button" class="btn btn-lg btn-block btn-primary" data-toggle="modal" data-target="#exampleModalCentered">Start Meeting</button>
+        <button type="button" class="btn btn-lg btn-block btn-primary" data-toggle="modal" data-target="#createMeetingModalCentered">Start Meeting</button>
     </div>
   </div>
   <div class="card mb-4 box-shadow">
@@ -61,7 +89,7 @@
                 </p>
             </div>
             <div class="card-footer">
-                <button type="button" class="btn btn-lg btn-block btn-primary" data-toggle="modal" data-target="#exampleModalCentered">Log in</button>
+                <button type="button" class="btn btn-lg btn-block btn-primary" data-toggle="modal" data-target="#loginModalCentered">Log in</button>
             </div>
           </div>
           <div class="card mb-4 box-shadow">
@@ -120,4 +148,66 @@
         </footer>
       </div>
   
+
+
+<!-- Create meeting modal -->
+<div class="modal" id="createMeetingModalCentered" tabindex="-1" role="dialog" aria-labelledby="createMeetingModalCenteredLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createMeetingModalCenteredLabel">Create Meeting</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <form action="/create-meeting/" method="POST">
+            {% csrf_token %}
+
+            <ul class='list-unstyled' id='searchResults'>
+              <!-- <li>{{user.email}}</li> -->
+            </ul>
+            <div class='form-group'>
+              <div class='input-group'>
+                <label for="{{ create_meeting.meeting_subject.id_for_label }}" class="sr-only">Subject</label>
+                <input type='text' required="" placeholder='Subject' class='form-control'
+                  id="{{ create_meeting.meeting_subject.id_for_label }}" name="{{ create_meeting.meeting_subject.html_name }}">
+              </div>
+            </div>
+
+            <div class='form-group'>
+              <div class='input-group'>
+                <label for="{{ create_meeting.meeting_description.id_for_label }}" class="sr-only">Description</label>
+                <input type='text' required="" placeholder='Description' class='form-control'
+                  id="{{ create_meeting.meeting_description.id_for_label }}" name="{{ create_meeting.meeting_description.html_name }}">
+              </div>
+            </div>
+
+            <div class='form-group'>
+              <div class='input-group'>
+                <label for="{{ create_meeting.meeting_starttime.id_for_label }}" class="sr-only">Start Time</label>
+                <input type='datetime-local' required="" placeholder='Start Time' class='form-control'
+                  id="{{ create_meeting.meeting_starttime.id_for_label }}" name="{{ create_meeting.meeting_starttime.html_name }}">
+              </div>
+            </div>
+
+            <div class='form-group'>
+                <div class='input-group'>
+                  <label for="{{ create_meeting.meeting_members.id_for_label }}" class="sr-only">Start Time</label>
+                  <input type="text" placeholder='Type an email to search...' name='{{ create_meeting.meeting_members.html_name }}' id='emailSearch' class='form-control' onkeydown="searchOpen()"/>
+                  <!-- <input type='datetime-local' required="" placeholder='Start Time' class='form-control'
+                    id="{{ create_meeting.meeting_starttime.id_for_label }}" name="{{ create_meeting.meeting_starttime.html_name }}"> -->
+                </div>
+              </div>
+
+            </div>
+            <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Meeting</button>
+          </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
