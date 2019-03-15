@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block links %}
+{% load staticfiles %}
+<link href="{% static 'meetingroom.css' %}" rel="stylesheet">
+
+{% endblock %}
+
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class='container'>
+    <div class='container-fluid chat-container bg-light shadow border'>
+        <div class='row'>
+            <div id='chat' class="col-sm-10">
+                <ul id='chat-list' class='list-unstyled'>
+                </ul>
+            </div>
+            <div id='member-list' class='col-sm-2 border border-bottom-0 border-top-0 border-right-0'>
+                <div class='row border border-top-0 border-left-0 border-right-0 justify-content-center'>
+                    Present
+                </div>
+                <ul class='list-unstyled text-justify py-1 text-center'>
+                    <li>{{ user.first_name }} {{ user.last_name }}</li>
+                </ul>
+            </div>
+        </div> <!-- end chat row -->
+        <div class='row  py-2 px-3 bg-primary border border-bottom-0 border-left-0 border-right-0'>
+            <div class='col-sm-10'>
+                <textarea id='chat-box' class='form-control mx-auto' placeholder="Type a message..."></textarea>
+            </div>
+            <div class='col-sm-2 d-flex mx-auto'>
+                <button id='attachment-chat' type='submit' class='btn btn-primary'>
+                    <i class="fas fa-paperclip fa-2x"></i>
+                </button>
+                <button id='send-chat' class='btn btn-primary'>
+                    <i class="fas fa-arrow-circle-right fa-2x"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+
+{% endif %}
+
+<script>
+    var meetingName = {{ meeting_name }};
+    // might not need meetingID?
+    var meetingID = 1;//{{ meeting_id }}
+
+
+    // <li class="message my-3 p-4 shadow-sm rounded">
+    //     <div class="row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2">
+    //         <div class="user-info col-3 d-flex">
+    //             <img class="rounded-circle" src="https://ui-avatars.com/api/?name=Sean+Capper&amp;rounded=true&amp;size=64"
+    //                 style="width: 32px; height: 32px;"><span class="align-self-center ml-2">Martin V.</span>
+    //         </div>
+    //         <div class="offset-7 col-2 chat-time text-right text-muted pull-right">10:45 PM</div>
+    //     </div>
+    //     <div class='row'>
+    //         <div class="message-body col-12">Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. </div>
+    //     </div>
+    // </li>
+
+    // create a message that will be displayed in the browser
+    function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp) {
+        var chatList = document.querySelector('#chat-list');
+        var message = $('<li></li>', {
+            class: 'message my-3 p-4 shadow-sm rounded',
+        });
+        var row1 = $('<div></div>', {
+            class: 'row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2'
+        });
+        var user_info_div = $('<div></div>', {
+            class: 'user-info col-3 d-flex',
+        });
+        var profile_pic = $("<img />", {
+            class: 'rounded-circle',
+            width: '32px',
+            height: '32px',
+            src: 'https://ui-avatars.com/api/?name=' + _user_fname + '+' + _user_lname + '&rounded=true&size=64',
+        });
+        var profile_name = $("<span>" + _user_fname + "</span>").addClass('align-self-center ml-2');
+        var time_stamp = $('<div>' + _timestamp + '</div>').addClass('offset-7 col-2 chat-time text-right text-muted font-italic font-weight-light pull-right');
+        
+        var row2 = $('<div></div>', {
+            class: 'row',
+        });
+        var message_body = $('<div>' + _message + '</div>').addClass('message-body col-12');
+
+        user_info_div.append(profile_pic);
+        user_info_div.append(profile_name);
+        row1.append(user_info_div)
+        row1.append(time_stamp);
+        row2.append(message_body);
+        message.append(row1);
+        message.append(row2);
+        $('#chat-list').append(message);
+    }
+
+    // connect to the same meeting as everyone else
+    var chatSocket = new WebSocket(
+        'ws://' + window.location.host +
+        '/ws/meeting/room/' + meetingName + '/');
+
+    // happens whenever the socket recieves a message
+    chatSocket.onmessage = function (e) {
+        var data = JSON.parse(e.data);
+        var user_firstname = data['user_firstname'];
+        var user_lastname = data['user_lastname'];
+        var message = data['message'];
+        var timestamp = data['timestamp'];
+        // create a message object and add it to chat list
+        create_message(user_firstname, user_lastname, message, '', timestamp);
+    };
+
+    // what happens when the socket connection closes
+    chatSocket.onclose = function (e) {
+        console.error("WebSocket has closed unexpectedly!");
+    };
+
+    document.querySelector('#send-chat').focus();
+    document.querySelector('#send-chat').onkeyup = function (e) {
+        if (e.keyCode == 13) {
+            document.querySelector('#send-chat').click();
+        }
+    }
+
+    document.querySelector('#send-chat').onclick = function (e) {
+        var messageInputDom = document.querySelector('#chat-box');
+        var message = messageInputDom.value;
+        chatSocket.send(JSON.stringify({
+            'userID': "{{ user.user_id }}",
+            'message': message,
+            'timestamp': (new Date().toLocaleTimeString('en-US', {
+                hour12: true,
+                hour: "numeric",
+                minute: "numeric"
+            })).toString(),
+        }));
+
+        messageInputDom.value = '';
+    };
+
+</script>
+
+<footer class="pt-4 my-md-5 pt-md-5 border-top">
+    <div class="row">
+        <div class="col-12 col-md">
+            <img class="mb-2" src="https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg" alt="" width="24"
+                height="24">
+            <small class="d-block mb-3 text-muted">&copy; 2017-2018</small>
+        </div>
+        <div class="col-6 col-md">
+            <h5>Features</h5>
+            <ul class="list-unstyled text-small">
+                <li><a class="text-muted" href="#">Cool stuff</a></li>
+                <li><a class="text-muted" href="#">Random feature</a></li>
+                <li><a class="text-muted" href="#">Team feature</a></li>
+                <li><a class="text-muted" href="#">Stuff for developers</a></li>
+                <li><a class="text-muted" href="#">Another one</a></li>
+                <li><a class="text-muted" href="#">Last time</a></li>
+            </ul>
+        </div>
+        <div class="col-6 col-md">
+            <h5>Resources</h5>
+            <ul class="list-unstyled text-small">
+                <li><a class="text-muted" href="#">Resource</a></li>
+                <li><a class="text-muted" href="#">Resource name</a></li>
+                <li><a class="text-muted" href="#">Another resource</a></li>
+                <li><a class="text-muted" href="#">Final resource</a></li>
+            </ul>
+        </div>
+        <div class="col-6 col-md">
+            <h5>About</h5>
+            <ul class="list-unstyled text-small">
+                <li><a class="text-muted" href="#">Team</a></li>
+                <li><a class="text-muted" href="#">Locations</a></li>
+                <li><a class="text-muted" href="#">Privacy</a></li>
+                <li><a class="text-muted" href="#">Terms</a></li>
+            </ul>
+        </div>
+    </div>
+</footer>
+</div>
+
+{% endblock %}
