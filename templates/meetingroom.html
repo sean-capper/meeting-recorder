@@ -16,12 +16,12 @@
                 <ul id='chat-list' class='list-unstyled'>
                 </ul>
             </div>
-            <div id='member-list' class='col-sm-2 border border-bottom-0 border-top-0 border-right-0'>
+            <div class='col-sm-2 border border-bottom-0 border-top-0 border-right-0'>
                 <div class='row border border-top-0 border-left-0 border-right-0 justify-content-center'>
                     Present
                 </div>
-                <ul class='list-unstyled text-justify py-1 text-center'>
-                    <li>{{ user.first_name }} {{ user.last_name }}</li>
+                <ul id='member-list' class='list-unstyled text-justify py-1 text-center'>
+                    
                 </ul>
             </div>
         </div> <!-- end chat row -->
@@ -45,7 +45,7 @@
 {% endif %}
 
 <script>
-    var meetingName = {{ meeting_name }};
+    var meeting_url = {{ meeting_url }};
     // might not need meetingID?
     var meetingID = 1;//{{ meeting_id }}
 
@@ -88,17 +88,27 @@
     // connect to the same meeting as everyone else
     var chatSocket = new WebSocket(
         'ws://' + window.location.host +
-        '/ws/meeting/room/' + meetingName + '/');
+        '/ws/meeting/room/' + meeting_url + '/');
 
     // happens whenever the socket recieves a message
     chatSocket.onmessage = function (e) {
         var data = JSON.parse(e.data);
-        var user_firstname = data['user_firstname'];
-        var user_lastname = data['user_lastname'];
-        var message = data['message'];
-        var timestamp = data['timestamp'];
-        // create a message object and add it to chat list
-        create_message(user_firstname, user_lastname, message, '', timestamp);
+        if(data['type'] == 'chat_message') {
+            var user_firstname = data['user_firstname'];
+            var user_lastname = data['user_lastname'];
+            var message = data['message'];
+            var timestamp = data['timestamp'];
+            // create a message object and add it to chat list
+            create_message(user_firstname, user_lastname, message, '', timestamp);
+        }
+        // add the new list of members to the memberlist element
+        else if(data['type'] == 'refresh_members_list') {
+            var members = data['members'];
+            $('#member-list').empty();
+            members.forEach(member_name => {
+                $('#member-list').append('<li>'+member_name+'</li>');
+            });
+        }
     };
 
     // what happens when the socket connection closes
@@ -117,6 +127,7 @@
         var messageInputDom = document.querySelector('#chat-box');
         var message = messageInputDom.value;
         chatSocket.send(JSON.stringify({
+            'type': 'chat_message',
             'userID': "{{ user.user_id }}",
             'message': message,
             'timestamp': (new Date().toLocaleTimeString('en-US', {

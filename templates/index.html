@@ -12,7 +12,6 @@
 
   function searchOpen() {
     var search = $('#emailSearch').val()
-    // if(search.length >= 2) {
       var data = {
         search: search
       };
@@ -23,7 +22,6 @@
         jsonp: 'callback',
         jsonpCallback: 'searchResult'
       });
-    // }
   }
 
   function searchResult(data) {
@@ -35,7 +33,7 @@
   }
 </script>
 
-
+{{ create_meeting.errors }}
 <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
     <h1 class="display-4">Welcome, <span class='text-primary'>{{ user.first_name }} {{ user.last_name }}</span>.</h1>
 </div>
@@ -195,8 +193,6 @@
                 <div class='input-group'>
                   <label for="{{ create_meeting.meeting_members.id_for_label }}" class="sr-only">Start Time</label>
                   <input type="text" placeholder='Type an email to search...' name='{{ create_meeting.meeting_members.html_name }}' id='emailSearch' class='form-control' onkeydown="searchOpen()"/>
-                  <!-- <input type='datetime-local' required="" placeholder='Start Time' class='form-control'
-                    id="{{ create_meeting.meeting_starttime.id_for_label }}" name="{{ create_meeting.meeting_starttime.html_name }}"> -->
                 </div>
               </div>
 

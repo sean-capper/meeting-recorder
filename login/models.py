@@ -51,4 +51,5 @@ class User(AbstractUser):
     
     objects = UserManager()
 
-    
+    def __str(self):
+        return self.email

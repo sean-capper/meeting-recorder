@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, HttpResponse
 from django.utils.safestring import mark_safe
 from login.models import User
+from meeting.models import Meeting, Relate
 from .forms import CreateMeetingForm
 import json
 
@@ -11,9 +12,9 @@ def home(request):
         'create_meeting': create_meeting_form,
     })
 
-def meeting_room(request, room_name):
+def meeting_room(request, meeting_url):
     return render(request, 'meetingroom.html', {
-        'meeting_name': mark_safe(json.dumps(room_name))
+        'meeting_url': mark_safe(json.dumps(meeting_url))
     })
 
 def autocomplete(request):
@@ -30,9 +31,26 @@ def autocomplete(request):
 
 def create_meeting(request):
     form = CreateMeetingForm(request.POST or None)
-    print(form)
     if(form.is_valid()):
-        print(form.cleaned_data)
+        subject = form.cleaned_data['meeting_subject']
+        descripton = form.cleaned_data['meeting_description']
+        start_time = form.cleaned_data['meeting_starttime']
+        organizer = request.user
+        meeting = Meeting.create_meeting(subject=subject, descripton=descripton, start_time=start_time, organizer=organizer)
+        meeting.save()
+        
+        # this will need to be a list of all invited members
+        member = User.objects.get(email=form.cleaned_data['meeting_members'])
+        
+        # create the organizer in the Relate table
+        organizer_relate = Relate.objects.create(user=organizer, meeting=meeting, role='ORGANIZER', status='PRESENT')
+        # loop through invited members and create them in the Relate table
+        relate = Relate.objects.create(user=member, meeting=meeting, role='MEMBER', status='INVITED')
+        relate.save()
+        print(meeting)
+        return redirect('meeting:meeting-room', meeting.url)
     else:
         print("form is invalid")
-    return redirect('meeting:meeting-room', 'test')
+        return render(request, 'index.html', {
+            'create_meeting': form
+        })
