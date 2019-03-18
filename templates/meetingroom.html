@@ -45,6 +45,17 @@
 {% endif %}
 
 <script>
+    $('#send-chat').trigger('click');
+    $('#chat-box').keydown(function(e) {
+        var code = (e.keyCode ? e.keyCode : e.which);
+        if(code == 13) {
+            e.preventDefault();
+            $('#send-chat').click();
+            // $('#chat-box').val('');
+            return true;
+        }
+    });
+
     var meeting_url = {{ meeting_url }};
     // might not need meetingID?
     var meetingID = 1;//{{ meeting_id }}
@@ -88,7 +99,7 @@
     // connect to the same meeting as everyone else
     var chatSocket = new WebSocket(
         'ws://' + window.location.host +
-        '/ws/meeting/room/' + meeting_url + '/');
+        '/ws/m/' + meeting_url + '/');
 
     // happens whenever the socket recieves a message
     chatSocket.onmessage = function (e) {
