@@ -16,12 +16,12 @@
                 <ul id='chat-list' class='list-unstyled'>
                 </ul>
             </div>
-            <div id='member-list' class='col-sm-2 border border-bottom-0 border-top-0 border-right-0'>
+            <div class='col-sm-2 border border-bottom-0 border-top-0 border-right-0'>
                 <div class='row border border-top-0 border-left-0 border-right-0 justify-content-center'>
                     Present
                 </div>
-                <ul class='list-unstyled text-justify py-1 text-center'>
-                    <li>{{ user.first_name }} {{ user.last_name }}</li>
+                <ul id='member-list' class='list-unstyled text-justify py-1 text-center'>
+                    
                 </ul>
             </div>
         </div> <!-- end chat row -->
@@ -45,29 +45,26 @@
 {% endif %}
 
 <script>
-    var meetingName = {{ meeting_name }};
+    $('#send-chat').trigger('click');
+    $('#chat-box').keydown(function(e) {
+        var code = (e.keyCode ? e.keyCode : e.which);
+        if(code == 13) {
+            e.preventDefault();
+            $('#send-chat').click();
+            // $('#chat-box').val('');
+            return true;
+        }
+    });
+
+    var meeting_url = {{ meeting_url }};
     // might not need meetingID?
     var meetingID = 1;//{{ meeting_id }}
-
-
-    // <li class="message my-3 p-4 shadow-sm rounded">
-    //     <div class="row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2">
-    //         <div class="user-info col-3 d-flex">
-    //             <img class="rounded-circle" src="https://ui-avatars.com/api/?name=Sean+Capper&amp;rounded=true&amp;size=64"
-    //                 style="width: 32px; height: 32px;"><span class="align-self-center ml-2">Martin V.</span>
-    //         </div>
-    //         <div class="offset-7 col-2 chat-time text-right text-muted pull-right">10:45 PM</div>
-    //     </div>
-    //     <div class='row'>
-    //         <div class="message-body col-12">Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. Test message. </div>
-    //     </div>
-    // </li>
 
     // create a message that will be displayed in the browser
     function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp) {
         var chatList = document.querySelector('#chat-list');
         var message = $('<li></li>', {
-            class: 'message my-3 p-4 shadow-sm rounded',
+            class: 'message my-3 p-4 shadow rounded',
         });
         var row1 = $('<div></div>', {
             class: 'row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2'
@@ -102,17 +99,27 @@
     // connect to the same meeting as everyone else
     var chatSocket = new WebSocket(
         'ws://' + window.location.host +
-        '/ws/meeting/room/' + meetingName + '/');
+        '/ws/m/' + meeting_url + '/');
 
     // happens whenever the socket recieves a message
     chatSocket.onmessage = function (e) {
         var data = JSON.parse(e.data);
-        var user_firstname = data['user_firstname'];
-        var user_lastname = data['user_lastname'];
-        var message = data['message'];
-        var timestamp = data['timestamp'];
-        // create a message object and add it to chat list
-        create_message(user_firstname, user_lastname, message, '', timestamp);
+        if(data['type'] == 'chat_message') {
+            var user_firstname = data['user_firstname'];
+            var user_lastname = data['user_lastname'];
+            var message = data['message'];
+            var timestamp = data['timestamp'];
+            // create a message object and add it to chat list
+            create_message(user_firstname, user_lastname, message, '', timestamp);
+        }
+        // add the new list of members to the memberlist element
+        else if(data['type'] == 'refresh_members_list') {
+            var members = data['members'];
+            $('#member-list').empty();
+            members.forEach(member_name => {
+                $('#member-list').append('<li>'+member_name+'</li>');
+            });
+        }
     };
 
     // what happens when the socket connection closes
@@ -131,6 +138,7 @@
         var messageInputDom = document.querySelector('#chat-box');
         var message = messageInputDom.value;
         chatSocket.send(JSON.stringify({
+            'type': 'chat_message',
             'userID': "{{ user.user_id }}",
             'message': message,
             'timestamp': (new Date().toLocaleTimeString('en-US', {
