@@ -3,7 +3,7 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import json
 from login.models import User
-from meeting.models import Meeting, Relate
+from meeting.models import Meeting, Relate, Message, File
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
@@ -39,11 +39,10 @@ class ChatConsumer(WebsocketConsumer):
 
     def disconnect(self, close_code):
         # Leave room group
-
         user = User.objects.get(email=self.scope['user'])
         meeting = Meeting.objects.get(url=self.room_name)
         relate = Relate.objects.get(user=user, meeting=meeting)
-        relate.status = 'NOT PRESENT'
+        relate.status = 'ATTENDED'
         relate.save()
 
         # send message to all members in group the new list of present members in chat
@@ -69,9 +68,19 @@ class ChatConsumer(WebsocketConsumer):
         text_data_json = json.loads(text_data)
         _type = text_data_json['type']
         userID = int(text_data_json['userID'])
-        message = text_data_json['message']
+        meetingID = int(text_data_json['meetingID'])
+        message_text = text_data_json['message']
         timestamp = text_data_json['timestamp']
         user = User.objects.get(pk=userID)
+
+
+        # save the message in the DB
+        message = Message()
+        message.user = User.objects.get(pk=userID)
+        message.meeting = Meeting.objects.get(pk=meetingID)
+        message.text = message_text
+        # message.timestamp = timestamp
+        message.save()
 
         # Send message to room group
         async_to_sync(self.channel_layer.group_send)(
@@ -80,7 +89,7 @@ class ChatConsumer(WebsocketConsumer):
                 'type': 'chat_message',
                 'user_firstname': user.first_name,
                 'user_lastname': user.last_name,
-                'message': message,
+                'message': message_text,
                 'timestamp': timestamp,
             }
         )

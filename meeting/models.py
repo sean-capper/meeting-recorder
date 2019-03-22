@@ -52,7 +52,7 @@ class Message(models.Model):
     message_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE)
-    time = models.DateTimeField(auto_now_add=True)
+    time = models.TimeField(auto_now_add=True)
     text = models.CharField(max_length=200)
 
 class File(models.Model):
@@ -62,6 +62,6 @@ class File(models.Model):
     file_name = models.CharField(max_length=100)
     file_type = models.CharField(max_length=15)
     file_source = models.FileField(upload_to='files/')
-    date_created = models.DateTimeField(auto_now_add=True)
+    date_created = models.TimeField(auto_now_add=True)
 
 

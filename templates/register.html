@@ -10,6 +10,28 @@
     <h4 class='display-4'>Welcome to MeetingRecorder</h4>
     <p class="lead">In order to use this service, you must register an account using the form below.   </p>
 </div>
+
+{% if create_user.errors %}
+<div class='row justify-content-center'>
+    <ul class='list-unstyled'>
+        {% for field in create_user %}
+            {% if field.errors %}
+                <li>
+                  <div class="alert alert-danger" role="alert">
+                    <strong>Error</strong> {{ field.errors|striptags }}
+                  </div>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>
+<div class='row justify-content-center'>
+  {% for error in create_user.non_field_errors %}
+  <p class='error-message'>{{ error }}</p>
+  {% endfor %}
+</div>
+{% endif %} 
+
 <div class='row justify-content-center'>
 
     <form action="/register/" method="POST">
@@ -64,23 +86,6 @@
         </div>
     </form>
 </div>
-<hr>
 
 
-{% if create_user.errors %}
-<div class='row justify-content-center'>
-    <ul class='list-unstyled'>
-        {% for field in create_user %}
-            {% if field.errors %}
-                <li>{{ field.errors|striptags }}</li>
-            {% endif %}
-        {% endfor %}
-    </ul>
-</div>
-<div class='row justify-content-center'>
-  {% for error in create_user.non_field_errors %}
-  <p class='error-message'>{{ error }}</p>
-  {% endfor %}
-</div>
-{% endif %} 
 {% endblock %}
