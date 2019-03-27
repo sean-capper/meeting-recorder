@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block links %}
+{% load static %}
+{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+    <h1 class="display-4">Meeting History</h1>
+    <p class="lead">Click the View button next to a meeting
+        to view the transcript!
+    </p>
+</div>
+<div class="container">
+    <!-- <div class='table-responsive-md'>
+    <table class="table table-bordered text-center">
+            <thead>
+              <tr>
+                <th scope="col">Meeting ID</th>
+                <th scope="col">Meeting Subject</th>
+                <th scope="col">Meeting Organizer</th>
+                <th scope="col">Meeting Date</th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+                {% for meeting in meetings_list %}
+              <tr>
+                <th scope="row"> {{ meeting.meeting.meeting_id }}</th>
+                <td>{{ meeting.meeting.subject }}</td>
+                <td>{{ meeting.meeting.organizer.first_name }} {{ meeting.meeting.organizer.last_name }}</td>
+                <td>{{ meeting.meeting.start_time }}</td>
+                <td><a class="btn btn-primary" href="/transcript/{{ meeting.meeting.meeting_id }}" role="button">View</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+    </div> -->
+
+    {% for meeting in meetings_list %}
+    <div class="row shadow mb-5 bg-light rounded border border-secondary mx-md-n3 ">
+        <div class="col-sm-3 py-3 px-md-3 border-right border-secondary">
+            {{ meeting.meeting.subject }}
+        </div>
+        <div class="col-sm-3 py-3 px-md-3 border-right border-secondary">
+            {{ meeting.meeting.organizer.first_name }} {{ meeting.meeting.organizer.last_name }}
+        </div>
+        <div class="col-sm-3 py-3 px-md-3 border-right border-secondary">
+            {{ meeting.meeting.start_time }}
+        </div>
+        <div class="col-sm-3">
+            <div class='d-flex my-auto'>
+                <a class="btn btn-primary" href="/transcript/{{ meeting.meeting.meeting_id }}" role="button">View</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+</div>
+
+
+
+<!-- Create meeting modal -->
+<div class="modal" id="createMeetingModalCentered" tabindex="-1" role="dialog"
+    aria-labelledby="createMeetingModalCenteredLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createMeetingModalCenteredLabel">Create Meeting</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="/create-meeting/" method="POST">
+                    {% csrf_token %}
+                    <div class='form-group'>
+                        <div class='input-group'>
+                            <div class='input-group-prepend'>
+                                <span class="input-group-text bg-primary text-white"
+                                    id="inputGroup-sizing-sm">Subject</span>
+                            </div>
+                            <!-- <label for="{{ create_meeting.meeting_subject.id_for_label }}" class="sr-only">Subject</label> -->
+                            <input type='text' required="" placeholder='Example Meeting' class='form-control'
+                                id="{{ create_meeting.meeting_subject.id_for_label }}"
+                                name="{{ create_meeting.meeting_subject.html_name }}">
+                        </div>
+                    </div>
+
+                    <div class='form-group'>
+                        <div class='input-group'>
+                            <div class='input-group-prepend'>
+                                <span class="input-group-text bg-primary text-white"
+                                    id="inputGroup-sizing-sm">Description</span>
+                            </div>
+                            <!-- <label for="{{ create_meeting.meeting_description.id_for_label }}" class="sr-only">Description</label> -->
+                            <input type='text' required="" placeholder='A brief description of the meeting.'
+                                class='form-control' id="{{ create_meeting.meeting_description.id_for_label }}"
+                                name="{{ create_meeting.meeting_description.html_name }}">
+                        </div>
+                    </div>
+
+                    <div class='form-group'>
+                        <div class='input-group'>
+                            <div class='input-group-prepend'>
+                                <span class="input-group-text bg-primary text-white" id="inputGroup-sizing-sm">Start
+                                    Time</span>
+                            </div>
+                            <!-- <label for="{{ create_meeting.meeting_starttime.id_for_label }}" class="sr-only">Start Time</label> -->
+                            <input type='datetime-local' required="" placeholder='Start Time' class='form-control'
+                                id="{{ create_meeting.meeting_starttime.id_for_label }}"
+                                name="{{ create_meeting.meeting_starttime.html_name }}">
+                        </div>
+                    </div>
+
+                    <div class='form-group'>
+                        <div class='input-group'>
+                            <!-- <div class='input-group-prepend'>
+                    <span class="input-group-text bg-primary text-white" id="inputGroup-sizing-sm">Invite List</span>
+                </div> -->
+                            <!-- <label for="{{ create_meeting.meeting_members.id_for_label }}" class="sr-only">Start Time</label> -->
+                            <input type="text" placeholder='Type an email to search...' id='emailSearch'
+                                class='form-control' onkeydown="searchOpen()" />
+                            <div class='input-group-append'>
+                                <button type='button' class="btn btn-primary" id='addInvite'>Invite</button>
+                            </div>
+                            <input type='hidden' name='{{ create_meeting.meeting_members.html_name }}'
+                                id='meeting_members' value=''>
+                        </div>
+                    </div>
+                    <div class='form-group'>
+                        <div class='input-group' id='searchResults'>
+
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class='form-group container'>
+                        <h5>Invited</h5>
+                        <div class='input-group' id='invited-member-list'>
+
+                        </div>
+                    </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Meeting</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Join meeting modal -->
+<div class="modal" id="joinMeetingModalCentered" tabindex="-1" role="dialog"
+    aria-labelledby="joinMeetingModalCenteredLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="joinMeetingModalCenteredLabel">Join Meeting</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="/join-meeting/" method="POST">
+                    {% csrf_token %}
+
+                    <div class='form-group'>
+                        <div class='input-group'>
+                            <div class='input-group-prepend'>
+                                <span class="input-group-text bg-primary text-white"
+                                    id="inputGroup-sizing-sm">/m/</span>
+                            </div>
+                            <!-- <label for="{{ join_meeting.meeting_url.id_for_label }}" class="sr-only">URL</label> -->
+                            <input type='text' required="" placeholder='Example: ag48f3glmd' class='form-control'
+                                id="{{ join_meeting.meeting_url.id_for_label }}"
+                                name="{{ join_meeting.meeting_url.html_name }}">
+                        </div>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Join Meeting</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    var member_list = $('#invited-member-list');
+    $('#addInvite').click(function (e) {
+        var member = $('#emailSearch').val();
+        if (e.which == 1 && member !== '') {
+            e.preventDefault();
+            var list = $('#meeting_members').val();
+            list += member + ",";
+            $('#meeting_members').val(list);
+            $('#emailSearch').val('');
+            member_list.append('<div class="col-sm-4">' + member + '</div>');
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, HttpResponse
-from django.contrib import messages
+from django.contrib import messages as session_message
 from django.utils.safestring import mark_safe
 from django.db import models
 from login.models import User
-from meeting.models import Meeting, Relate
+from meeting.models import Meeting, Relate, Message, File
 from .forms import CreateMeetingForm, JoinMeetingForm
 import json
 
@@ -17,6 +17,7 @@ def home(request):
     })
 
 def meeting_room(request, meeting_url):
+    print(meeting_url)
     try:
         user = User.objects.get(email=request.user)
     except models.ObjectDoesNotExist:
@@ -35,14 +36,15 @@ def meeting_room(request, meeting_url):
     # if the meeting exists, the user is logged in, and the user was invited to this specific meeting, return the meeting room view
     if(is_invited):
         return render(request, 'meetingroom.html', {
+            'meeting_id': mark_safe(json.dumps(meeting.meeting_id)),
             'meeting_url': mark_safe(json.dumps(meeting_url))
         })
     # if the meeting does not exist, create a different error
     if(meeting is None):
-        messages.error(request, 'This meeting does not exist!')
+        session_message.error(request, 'This meeting does not exist!')
     # otherwise, if the user is not logged in or not invited, create an error message
     elif(not is_invited):
-        messages.error(request, 'You were not invited to this meeting!')
+        session_message.error(request, 'You were not invited to this meeting!')
     return redirect('meeting:home')
 
 def autocomplete(request):
@@ -100,3 +102,26 @@ def join_meeting(request):
         return redirect('meeting:meeting-room', url)
     
     return redirect('meeting:home')
+
+def history(request):
+    if(request.user.is_authenticated):
+        meetings_list = Relate.objects.filter(user=request.user)
+        print(meetings_list[0].meeting)
+        return render(request, 'history.html', {
+            'meetings_list': meetings_list,
+        })
+    else:
+        return redirect('meeting:home')
+
+def transcript(request, meeting_id):
+    # if the user is signed in, and the user was invited or part of the requested meeting
+    if(request.user.is_authenticated and Relate.objects.filter(user=request.user, meeting=meeting_id).exists()):
+        message_list = Message.objects.filter(meeting_id=meeting_id).order_by('time')
+        print(message_list)
+        return render(request, 'transcript.html', {
+            'meeting': Meeting.objects.get(pk=meeting_id),
+            'message_list': message_list,
+        })
+    else:
+        session_message.error(request, 'You were not invited to this meeting and cannot view the transcript!')
+        return redirect('meeting:home')

@@ -7,7 +7,7 @@ from .forms import UserCreationForm, UserChangeForm
 def login(request):
     form = AuthenticationForm()
     if(request.user.is_authenticated):
-        return redirect(request.path_info)
+        return redirect('meeting:home')
     elif(request.POST):
         form = AuthenticationForm(data=request.POST)
         request.session['login_from'] = request.META.get('HTTP_REFERER', '/')
