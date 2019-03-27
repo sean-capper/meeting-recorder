@@ -13,7 +13,7 @@
     </p>
 </div>
 <div class="container">
-    <div class='table-responsive-md'>
+    <!-- <div class='table-responsive-md'>
     <table class="table table-bordered text-center">
             <thead>
               <tr>
@@ -36,9 +36,10 @@
               {% endfor %}
             </tbody>
           </table>
-    </div>
+    </div> -->
 
-    <!-- <div class="row shadow mb-5 bg-light rounded border border-secondary mx-md-n3 ">
+    {% for meeting in meetings_list %}
+    <div class="row shadow mb-5 bg-light rounded border border-secondary mx-md-n3 ">
         <div class="col-sm-3 py-3 px-md-3 border-right border-secondary">
             {{ meeting.meeting.subject }}
         </div>
@@ -50,10 +51,11 @@
         </div>
         <div class="col-sm-3">
             <div class='d-flex my-auto'>
-                <button class='align-self-center btn btn-primary mx-auto my-auto'>View</button>
+                <a class="btn btn-primary" href="/transcript/{{ meeting.meeting.meeting_id }}" role="button">View</a>
             </div>
         </div>
-    </div> -->
+    </div>
+    {% endfor %}
 </div>
 {% endif %}
 </div>

@@ -17,6 +17,7 @@ def home(request):
     })
 
 def meeting_room(request, meeting_url):
+    print(meeting_url)
     try:
         user = User.objects.get(email=request.user)
     except models.ObjectDoesNotExist:
