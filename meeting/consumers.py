@@ -28,30 +28,6 @@ class ChatConsumer(WebsocketConsumer):
         for member in members_qs:
             members.append(member.__str__())
 
-        # load all messages
-        messages_qs = Message.objects.filter(meeting=meeting).order_by('timestamp')
-        for message in messages_qs:
-            user = User.objects.get(pk=message.user_id)
-            # m = {
-            #     'type': 'chat_message',
-            #     'user_firstname': user.first_name,
-            #     'user_lastname': user.last_name,
-            #     'message': message.text,
-            #     'timestamp': message.timestamp.__str__(),
-            # }
-            # print(json.dumps(m, indent=4))
-            async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'user_firstname': user.first_name,
-                'user_lastname': user.last_name,
-                'message': message.text,
-                'timestamp': message.timestamp.__str__(),
-            }
-        )
-        # print(messages_qs)
-        
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
             {

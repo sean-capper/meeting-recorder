@@ -125,3 +125,26 @@ def transcript(request, meeting_id):
     else:
         session_message.error(request, 'You were not invited to this meeting and cannot view the transcript!')
         return redirect('meeting:home')
+
+def load_chat_history(request, meeting_url):
+    meeting_id = int(request.GET['meeting_id'])
+    messages_qs = Message.objects.filter(meeting=meeting_id).order_by('timestamp')
+    messages = []
+    for message in messages_qs:
+        user = User.objects.get(pk=message.user_id)
+        timestamp = message.timestamp.__str__()[0:5]
+        hours = int(timestamp[0:2])
+        if(hours > 12):
+            hours -= 12
+            timestamp = "%d:%s PM" % (hours, timestamp[3:])
+        else:
+            timestamp = '%s AM' % timestamp
+
+        messages.append({
+                'user_firstname': user.first_name,
+                'user_lastname': user.last_name,
+                'message': message.text,
+                'timestamp': timestamp,
+        })
+
+    return HttpResponse(json.dumps(messages), content_type='application/json')

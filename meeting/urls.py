@@ -10,4 +10,5 @@ urlpatterns = [
     path('search.json', views.autocomplete, name='autocomplete'),
     path('history/', views.history, name='history'),
     path('transcript/<int:meeting_id>/', views.transcript, name='transcript'),
+    path('m/<str:meeting_url>/load-history', views.load_chat_history, name='load-history')
 ]

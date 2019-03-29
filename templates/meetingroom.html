@@ -30,34 +30,49 @@
                 <textarea id='chat-box' class='form-control mx-auto' placeholder="Type a message..."></textarea>
             </div>
             <div class='col-sm-2 d-flex mx-auto'>
-                <button id='attachment-chat' type='submit' class='btn btn-primary'>
+                <button id='attachment-btn' type='submit' class='btn btn-primary'>
                     <i class="fas fa-paperclip fa-2x"></i>
                 </button>
                 <button id='send-chat' class='btn btn-primary'>
                     <i class="fas fa-arrow-circle-right fa-2x"></i>
                 </button>
+                <form class='sr-only'>
+                    <input type='file' id='file_upload'>
+                </form>
             </div>
         </div>
     </div>
 </div>
-{% else %}
-
 {% endif %}
 
 <script>
+    const file_input = $('#file_upload')
+
+    $('#attachment-btn').click(function(e) {
+        e.preventDefault();
+        file_input.click();
+    });
+
+    // $('#file_upload').addEventListener('change', function(e) {
+    //     const fd = new FileData();
+
+       
+    //     console.log(e.target.files[0]);
+    // });
+
+
     $('#send-chat').trigger('click');
     $('#chat-box').keydown(function(e) {
         var code = (e.keyCode ? e.keyCode : e.which);
         if(code == 13) {
             e.preventDefault();
             $('#send-chat').click();
-            // $('#chat-box').val('');
             return true;
         }
     });
 
     var meeting_url = {{ meeting_url }};
-    // var meetingID = {{ meeting_id }};
+    var meeting_id = {{ meeting_id }};
 
     // create a message that will be displayed in the browser
     function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp) {
@@ -99,6 +114,22 @@
     var chatSocket = new WebSocket(
         'ws://' + window.location.host +
         '/ws/m/' + meeting_url + '/');
+    
+    chatSocket.onopen = function(e) {
+        var data = {
+            'meeting_id': meeting_id,
+        }
+        $.ajax({
+            url: 'load-history',
+            type: 'GET',
+            data: data,
+            success: function(json) {
+                json.forEach(message => {
+                    create_message(message['user_firstname'], message['user_lastname'], message['message'], '', message['timestamp'])
+                })
+            }
+        });
+    };
 
     // happens whenever the socket recieves a message
     chatSocket.onmessage = function (e) {
