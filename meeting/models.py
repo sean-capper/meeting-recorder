@@ -10,7 +10,7 @@ class Meeting(models.Model):
     subject = models.CharField(max_length=50)
     descripton = models.CharField(max_length=100)
     organizer = models.ForeignKey(User, related_name='user_id_set', on_delete=models.CASCADE)
-    members = models.ManyToManyField(User, null=True, through='Relate', through_fields=('meeting', 'user'))
+    members = models.ManyToManyField(User, through='Relate', through_fields=('meeting', 'user'))
     url = models.CharField(max_length=128, default='DEFAULT', unique=True)
 
     def __str__(self):
@@ -52,7 +52,7 @@ class Message(models.Model):
     message_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE)
-    time = models.TimeField(auto_now_add=True)
+    timestamp = models.TimeField(auto_now_add=True)
     text = models.CharField(max_length=200)
 
 class File(models.Model):

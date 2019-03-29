@@ -116,7 +116,7 @@ def history(request):
 def transcript(request, meeting_id):
     # if the user is signed in, and the user was invited or part of the requested meeting
     if(request.user.is_authenticated and Relate.objects.filter(user=request.user, meeting=meeting_id).exists()):
-        message_list = Message.objects.filter(meeting_id=meeting_id).order_by('time')
+        message_list = Message.objects.filter(meeting_id=meeting_id).order_by('timestamp')
         print(message_list)
         return render(request, 'transcript.html', {
             'meeting': Meeting.objects.get(pk=meeting_id),
