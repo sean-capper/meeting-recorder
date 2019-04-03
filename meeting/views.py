@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect, HttpResponse
 from django.contrib import messages as session_message
 from django.utils.safestring import mark_safe
 from django.db import models
+from django.views.decorators.csrf import csrf_exempt
 from login.models import User
 from meeting.models import Meeting, Relate, Message, File
-from .forms import CreateMeetingForm, JoinMeetingForm
+from .forms import CreateMeetingForm, JoinMeetingForm, FileForm
 import json
 
 # Create your views here.
@@ -37,7 +38,7 @@ def meeting_room(request, meeting_url):
     if(is_invited):
         return render(request, 'meetingroom.html', {
             'meeting_id': mark_safe(json.dumps(meeting.meeting_id)),
-            'meeting_url': mark_safe(json.dumps(meeting_url))
+            'meeting_url': mark_safe(json.dumps(meeting_url)),
         })
     # if the meeting does not exist, create a different error
     if(meeting is None):
@@ -148,3 +149,24 @@ def load_chat_history(request, meeting_url):
         })
 
     return HttpResponse(json.dumps(messages), content_type='application/json')
+
+
+@csrf_exempt
+def upload_file(request, meeting_url):
+    form = FileForm(request.POST, request.FILES)
+    if(form.is_valid()):
+        print(form.cleaned_data)
+        uf = File()
+        uf.user = form.cleaned_data['user']
+        uf.meeting = form.cleaned_data['meeting']
+        uf.file_source = form.cleaned_data['file_source']
+        
+        full_filename = form.cleaned_data['file_source'].__str__().split('.')
+        file_name = full_filename[0]
+        file_extension = full_filename[1] if len(full_filename) == 2 else None
+        uf.file_name = file_name
+        uf.file_type = file_extension
+        uf.save()
+
+    result = {'file_source': uf.file_source.__str__()}
+    return HttpResponse(json.dumps(result), content_type='application/json')

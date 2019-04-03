@@ -111,6 +111,12 @@ class ChatConsumer(WebsocketConsumer):
             'message': message,
             'timestamp': timestamp,
         }))
+    
+    def file_message(self, event):
+        _type = event['type']
+        user_firstname = event['user_firstname']
+        user_Lastname = event['user_lastname']
+        uploaded_file = event['uploaded_file']
 
     def refresh_members_list(self, event):
         _type = event['type']

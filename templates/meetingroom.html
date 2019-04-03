@@ -14,6 +14,23 @@
         <div class='row'>
             <div id='chat' class="col-sm-10">
                 <ul id='chat-list' class='list-unstyled'>
+                        <li class="message my-3 py-2 px-4 shadow rounded border">
+                            <div class="row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2">
+                                <div class="user-info col-3 d-flex">
+                                    <img class="rounded-circle" src="https://ui-avatars.com/api/?name=Sean+Capper&amp;rounded=true&amp;size=64" style="width: 32px; height: 32px;">
+                                    <span class="align-self-center ml-2">Sean</span></div>
+                                <div class="offset-7 col-2 chat-time text-right text-muted font-italic font-weight-light pull-right">
+                                    7:21 PM
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="message-body col-12">another file test</div>
+                            </div>
+
+                            <div class="row border-top mt-2 text-right">
+                                <div class="message-body col-12"><a href="/files/9tzfn6oooe/SeniorProject.docx">SeniorProject.docx</a> <i class="fas fa-paperclip text-primary"></i></div>
+                            </div>
+                        </li>
                 </ul>
             </div>
             <div class='col-sm-2 border border-bottom-0 border-top-0 border-right-0'>
@@ -30,14 +47,26 @@
                 <textarea id='chat-box' class='form-control mx-auto' placeholder="Type a message..."></textarea>
             </div>
             <div class='col-sm-2 d-flex mx-auto'>
-                <button id='attachment-btn' type='submit' class='btn btn-primary'>
+                <button id='attachment-btn' class='btn btn-primary'>
                     <i class="fas fa-paperclip fa-2x"></i>
                 </button>
                 <button id='send-chat' class='btn btn-primary'>
                     <i class="fas fa-arrow-circle-right fa-2x"></i>
                 </button>
-                <form class='sr-only'>
-                    <input type='file' id='file_upload'>
+                <form id='file-form' action='upload-file/' class='sr-only' method='POST' enctype="multipart/form-data" target='upload_target'>
+                    {% csrf_token %}
+                    <label for="id_user">User</label>
+                    <select name="user" required="" id="id_user">
+                        <option value="{{user.user_id}}" selected></option>
+                    </select>
+
+                    <label for="id_meeting">Meeting</label>
+                    <select name="meeting" required="" id="id_meeting">
+                        <option value="{{meeting_id}}" selected></option>
+                    </select>
+
+                    <label for="id_file_source">File source</label>
+                    <input type="file" name="file_source" required id="id_file_source">
                 </form>
             </div>
         </div>
@@ -46,19 +75,20 @@
 {% endif %}
 
 <script>
-    const file_input = $('#file_upload')
+    const file_input = $('#id_file_source')
+    var fileName = null;
+    var meeting_url = {{ meeting_url }};
+    var meeting_id = {{ meeting_id }};
+    var uploaded_file;    
 
     $('#attachment-btn').click(function(e) {
         e.preventDefault();
         file_input.click();
     });
 
-    // $('#file_upload').addEventListener('change', function(e) {
-    //     const fd = new FileData();
-
-       
-    //     console.log(e.target.files[0]);
-    // });
+    $('#id_file_source').on('change', function(e) {
+        fileName = $('#id_file_source').val();
+    });
 
 
     $('#send-chat').trigger('click');
@@ -71,14 +101,12 @@
         }
     });
 
-    var meeting_url = {{ meeting_url }};
-    var meeting_id = {{ meeting_id }};
 
     // create a message that will be displayed in the browser
-    function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp) {
+    function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp, file_attachment) {
         var chatList = document.querySelector('#chat-list');
         var message = $('<li></li>', {
-            class: 'message my-3 p-4 shadow rounded border',
+            class: 'message my-3 p-2 shadow rounded border',
         });
         var row1 = $('<div></div>', {
             class: 'row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2'
@@ -96,10 +124,11 @@
         var time_stamp = $('<div>' + _timestamp + '</div>').addClass('offset-7 col-2 chat-time text-right text-muted font-italic font-weight-light pull-right');
         
         var row2 = $('<div></div>', {
-            class: 'row',
+            class: 'row pb-2',
         });
-        var message_body = $('<div>' + _message + '</div>').addClass('message-body col-12');
 
+        var message_body = $('<div>' + _message + '</div>').addClass('message-body col-12');
+3 
         user_info_div.append(profile_pic);
         user_info_div.append(profile_name);
         row1.append(user_info_div)
@@ -107,6 +136,19 @@
         row2.append(message_body);
         message.append(row1);
         message.append(row2);
+
+
+        if(file_attachment) {
+            var link = $('<div class="row border-top mt-2 text-right">'+
+                            '<div class="col-12">'+
+                                '<a href="/files/{{meeting_url}}'+file_attachment+'">'+file_attachment+'</a> '+ 
+                                '<i class="fas fa-paperclip text-primary"></i>'+
+                            '</div>'+
+                            '</div>', {}
+            );
+            message.append(link);
+        }
+
         $('#chat-list').append(message);
     }
 
@@ -139,6 +181,7 @@
             var user_lastname = data['user_lastname'];
             var message = data['message'];
             var timestamp = data['timestamp'];
+
             // create a message object and add it to chat list
             create_message(user_firstname, user_lastname, message, '', timestamp);
         }
@@ -163,10 +206,35 @@
             document.querySelector('#send-chat').click();
         }
     }
+    
+    function callback(response) {
+        uploaded_file = response['file_source'];
+    }
 
     document.querySelector('#send-chat').onclick = function (e) {
         var messageInputDom = document.querySelector('#chat-box');
         var message = messageInputDom.value;
+        // send the attachment if it exists
+        if(fileName) {
+            // an attachment exists, so send it to the server with the message
+            var form = $('#file-form');
+            var url = $('#file-form').attr('action');
+            var data = new FormData(form[0]);
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: data,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    callback(response);
+                    // console.log(response['file_source']);
+                    // uploaded_file = response['file_source'];
+                }
+            });
+        }
+        console.log(uploaded_file);
         chatSocket.send(JSON.stringify({
             'type': 'chat_message',
             'meetingID': "{{ meeting_id }}",
@@ -179,12 +247,11 @@
             })).toString(),
         }));
 
+
         messageInputDom.value = '';
+        fileName.val = '';
     };
-
 </script>
-
-
 </div>
 
 {% endblock %}

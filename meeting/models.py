@@ -55,13 +55,15 @@ class Message(models.Model):
     timestamp = models.TimeField(auto_now_add=True)
     text = models.CharField(max_length=2000)
 
+
+def get_upload_path(instance, filename):
+    return '{}/{}'.format(instance.meeting.url, filename)
+
 class File(models.Model):
     file_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE)
     file_name = models.CharField(max_length=100)
-    file_type = models.CharField(max_length=15)
-    file_source = models.FileField(upload_to='files/')
+    file_type = models.CharField(max_length=15, null=True)
+    file_source = models.FileField(upload_to=get_upload_path)
     date_created = models.TimeField(auto_now_add=True)
-
-

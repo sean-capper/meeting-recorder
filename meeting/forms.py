@@ -1,6 +1,6 @@
 from django import forms
 from login.models import User
-from .models import Meeting
+from .models import Meeting, File
 
 class CreateMeetingForm(forms.Form):
     meeting_subject = forms.CharField(label='Subject', max_length=50)
@@ -12,3 +12,9 @@ class CreateMeetingForm(forms.Form):
 
 class JoinMeetingForm(forms.Form):
     meeting_url = forms.CharField(label='URL', max_length=10)
+
+
+class FileForm(forms.ModelForm):
+    class Meta:
+        model = File
+        fields = ('user', 'meeting', 'file_source')
