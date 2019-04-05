@@ -10,27 +10,10 @@
 {% block content %}
 {% if user.is_authenticated %}
 <div class='container'>
-    <div class='container-fluid chat-container bg-light shadow border'>
+    <div class='container-fluid chat-container shadow border'>
         <div class='row'>
             <div id='chat' class="col-sm-10">
                 <ul id='chat-list' class='list-unstyled'>
-                        <!-- <li class="message my-3 py-2 px-4 shadow rounded border">
-                            <div class="row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2">
-                                <div class="user-info col-3 d-flex">
-                                    <img class="rounded-circle" src="https://ui-avatars.com/api/?name=Sean+Capper&amp;rounded=true&amp;size=64" style="width: 32px; height: 32px;">
-                                    <span class="align-self-center ml-2">Sean</span></div>
-                                <div class="offset-7 col-2 chat-time text-right text-muted font-italic font-weight-light pull-right">
-                                    7:21 PM
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="message-body col-12">another file test</div>
-                            </div>
-
-                            <div class="row border-top mt-2 text-right">
-                                <div class="message-body col-12"><a href="/files/9tzfn6oooe/SeniorProject.docx">SeniorProject.docx</a> <i class="fas fa-paperclip text-primary"></i></div>
-                            </div>
-                        </li> -->
                 </ul>
             </div>
             <div class='col-sm-2 border border-bottom-0 border-top-0 border-right-0'>
@@ -105,10 +88,10 @@
     function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp, file_attachment, file_name) {
         var chatList = document.querySelector('#chat-list');
         var message = $('<li></li>', {
-            class: 'message my-3 p-2 shadow rounded border',
+            class: 'message my-3 shadow rounded border container',
         });
         var row1 = $('<div></div>', {
-            class: 'row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2'
+            class: 'row border-muted border-bottom py-2'
         });
         var user_info_div = $('<div></div>', {
             class: 'user-info col-3 d-flex',
@@ -123,7 +106,7 @@
         var time_stamp = $('<div>' + _timestamp + '</div>').addClass('offset-7 col-2 chat-time text-right text-muted font-italic font-weight-light pull-right');
         
         var row2 = $('<div></div>', {
-            class: 'row pb-2',
+            class: 'row py-2',
         });
 
         var message_body = $('<div>' + _message + '</div>').addClass('message-body col-12');
@@ -136,12 +119,11 @@
         message.append(row1);
         message.append(row2);
 
-
-        if(file_attachment != null) {
-            var link = $('<div class="row border-top mt-2 text-right">'+
+        if(file_attachment != 'None') {
+            var link = $('<div class="row border-top mt-2 text-right py-1">'+
                             '<div class="col-12">'+
                                 '<a href="/files/'+file_attachment+'">'+file_name+'</a> '+ 
-                                '<i class="fas fa-paperclip text-primary"></i>'+
+                                '<i class="fas fa-paperclip text-info"></i>'+
                             '</div>'+
                             '</div>', {}
             );
@@ -166,7 +148,6 @@
             data: data,
             success: function(json) {
                 json.forEach(message => {
-                    console.log(message);
                     create_message(message['user_firstname'], message['user_lastname'], message['message'], '', message['timestamp'], message['file_source'], message['file_name'])
                 })
             }

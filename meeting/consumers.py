@@ -81,7 +81,7 @@ class ChatConsumer(WebsocketConsumer):
         message.user = User.objects.get(pk=userID)
         message.meeting = Meeting.objects.get(pk=meetingID)
         message.text = message_text
-        message.attached_file_id = File.objects.get(file_source=file_source).file_id
+        message.attached_file_id = File.objects.get(file_source=file_source).file_id if file_source is not None else None
         message.save()
 
         # uf = File.objects.get(file_source=file_source)

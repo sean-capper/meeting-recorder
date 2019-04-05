@@ -140,11 +140,14 @@ def load_chat_history(request, meeting_url):
             timestamp = "%d:%s PM" % (hours, timestamp[3:])
         else:
             timestamp = '%s AM' % timestamp
-        uf = File.objects.get(file_id=message.attached_file_id)
-        file_source = uf.file_source
-        file_extension = '.' + uf.file_type if uf.file_type is not None else ''
-        file_name = "{}{}".format(uf.file_name, file_extension)
-
+        uf = File.objects.get(file_id=message.attached_file_id) if message.attached_file_id is not None else None
+        if(uf):
+            file_source = uf.file_source
+            file_extension = '.' + uf.file_type if uf.file_type is not None else ''
+            file_name = "{}{}".format(uf.file_name, file_extension)
+        else:
+            file_source = None
+            file_name = None
         messages.append({
                 'user_firstname': user.first_name,
                 'user_lastname': user.last_name,
