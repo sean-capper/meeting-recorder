@@ -14,7 +14,7 @@
         <div class='row'>
             <div id='chat' class="col-sm-10">
                 <ul id='chat-list' class='list-unstyled'>
-                        <li class="message my-3 py-2 px-4 shadow rounded border">
+                        <!-- <li class="message my-3 py-2 px-4 shadow rounded border">
                             <div class="row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2">
                                 <div class="user-info col-3 d-flex">
                                     <img class="rounded-circle" src="https://ui-avatars.com/api/?name=Sean+Capper&amp;rounded=true&amp;size=64" style="width: 32px; height: 32px;">
@@ -30,7 +30,7 @@
                             <div class="row border-top mt-2 text-right">
                                 <div class="message-body col-12"><a href="/files/9tzfn6oooe/SeniorProject.docx">SeniorProject.docx</a> <i class="fas fa-paperclip text-primary"></i></div>
                             </div>
-                        </li>
+                        </li> -->
                 </ul>
             </div>
             <div class='col-sm-2 border border-bottom-0 border-top-0 border-right-0'>
@@ -64,7 +64,7 @@
                     <select name="meeting" required="" id="id_meeting">
                         <option value="{{meeting_id}}" selected></option>
                     </select>
-
+                
                     <label for="id_file_source">File source</label>
                     <input type="file" name="file_source" required id="id_file_source">
                 </form>
@@ -79,7 +79,6 @@
     var fileName = null;
     var meeting_url = {{ meeting_url }};
     var meeting_id = {{ meeting_id }};
-    var uploaded_file;    
 
     $('#attachment-btn').click(function(e) {
         e.preventDefault();
@@ -103,7 +102,7 @@
 
 
     // create a message that will be displayed in the browser
-    function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp, file_attachment) {
+    function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp, file_attachment, file_name) {
         var chatList = document.querySelector('#chat-list');
         var message = $('<li></li>', {
             class: 'message my-3 p-2 shadow rounded border',
@@ -138,10 +137,10 @@
         message.append(row2);
 
 
-        if(file_attachment) {
+        if(file_attachment != null) {
             var link = $('<div class="row border-top mt-2 text-right">'+
                             '<div class="col-12">'+
-                                '<a href="/files/{{meeting_url}}'+file_attachment+'">'+file_attachment+'</a> '+ 
+                                '<a href="/files/'+file_attachment+'">'+file_name+'</a> '+ 
                                 '<i class="fas fa-paperclip text-primary"></i>'+
                             '</div>'+
                             '</div>', {}
@@ -167,7 +166,8 @@
             data: data,
             success: function(json) {
                 json.forEach(message => {
-                    create_message(message['user_firstname'], message['user_lastname'], message['message'], '', message['timestamp'])
+                    console.log(message);
+                    create_message(message['user_firstname'], message['user_lastname'], message['message'], '', message['timestamp'], message['file_source'], message['file_name'])
                 })
             }
         });
@@ -181,9 +181,10 @@
             var user_lastname = data['user_lastname'];
             var message = data['message'];
             var timestamp = data['timestamp'];
-
+            var file_source = data['file_source'];
+            
             // create a message object and add it to chat list
-            create_message(user_firstname, user_lastname, message, '', timestamp);
+            create_message(user_firstname, user_lastname, message, '', timestamp, file_source);
         }
         // add the new list of members to the memberlist element
         else if(data['type'] == 'refresh_members_list') {
@@ -207,13 +208,10 @@
         }
     }
     
-    function callback(response) {
-        uploaded_file = response['file_source'];
-    }
-
     document.querySelector('#send-chat').onclick = function (e) {
         var messageInputDom = document.querySelector('#chat-box');
         var message = messageInputDom.value;
+        var uploaded_file;
         // send the attachment if it exists
         if(fileName) {
             // an attachment exists, so send it to the server with the message
@@ -227,30 +225,41 @@
                 cache: false,
                 processData: false,
                 contentType: false,
-                success: function(response) {
-                    callback(response);
-                    // console.log(response['file_source']);
-                    // uploaded_file = response['file_source'];
-                }
+                success: function(response) {}
+            }).done(function(response){
+                var json_message = JSON.stringify({
+                    'type': 'chat_message',
+                    'meetingID': "{{ meeting_id }}",
+                    'userID': "{{ user.user_id }}",
+                    'message': message,
+                    'timestamp': (new Date().toLocaleTimeString('en-US', {
+                        hour12: true,
+                        hour: "numeric",
+                        minute: "numeric"
+                    })).toString(),
+                    'file_source': response['file_source'],
+                });
+                chatSocket.send(json_message);
             });
+        } else {
+            var json_message = JSON.stringify({
+                'type': 'chat_message',
+                'meetingID': "{{ meeting_id }}",
+                'userID': "{{ user.user_id }}",
+                'message': message,
+                'timestamp': (new Date().toLocaleTimeString('en-US', {
+                    hour12: true,
+                    hour: "numeric",
+                    minute: "numeric"
+                })).toString(),
+                'file_source': null,
+            });
+            chatSocket.send(json_message);
         }
-        console.log(uploaded_file);
-        chatSocket.send(JSON.stringify({
-            'type': 'chat_message',
-            'meetingID': "{{ meeting_id }}",
-            'userID': "{{ user.user_id }}",
-            'message': message,
-            'timestamp': (new Date().toLocaleTimeString('en-US', {
-                hour12: true,
-                hour: "numeric",
-                minute: "numeric"
-            })).toString(),
-        }));
-
-
         messageInputDom.value = '';
-        fileName.val = '';
+        file_input.val = '';
     };
+    
 </script>
 </div>
 

@@ -28,7 +28,7 @@
         <div style="overflow: scroll; max-height: 700px; min-height: 700px;">
         <ul class='list-unstyled'>
         {% for message in message_list %}
-        <li class="message my-3 p-4 shadow rounded border">
+        <li class="message my-3 p-2 shadow rounded border">
             <div class="row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2">
                 <div class="user-info col-3 d-flex"><img class="rounded-circle"
                     src="https://ui-avatars.com/api/?name={{ message.user.first_name }}+{{ message.user.last_name }}&amp;rounded=true&amp;size=64"
@@ -36,9 +36,18 @@
                     <div class="offset-7 col-2 chat-time text-right text-muted font-italic font-weight-light pull-right">{{ message.timestamp }}
                 </div>
             </div>
-                <div class="row">
-                    <div class="message-body col-12">{{ message.text }}</div>
+            <div class="row">
+                <div class="message-body col-12">{{ message.text }}</div>
+            </div>
+            {% if message.attached_file_id %}
+            <div class="row border-top mt-2 text-right">
+                <div class="col-12">
+                    <a href="/files/{{message.attached_file.file_source}}">
+                        {{message.attached_file.file_name}}{% if message.attached_file.file_type %}.{{message.attached_file.file_type}}{% endif %}
+                    </a> <i class="fas fa-paperclip text-primary"></i>
                 </div>
+            </div>
+            {% endif %}
             </li>
             {% endfor %}
         </ul>

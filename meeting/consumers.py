@@ -72,6 +72,7 @@ class ChatConsumer(WebsocketConsumer):
         meetingID = int(text_data_json['meetingID'])
         message_text = text_data_json['message']
         timestamp = text_data_json['timestamp']
+        file_source = text_data_json['file_source']
         user = User.objects.get(pk=userID)
 
 
@@ -80,8 +81,12 @@ class ChatConsumer(WebsocketConsumer):
         message.user = User.objects.get(pk=userID)
         message.meeting = Meeting.objects.get(pk=meetingID)
         message.text = message_text
-        # message.timestamp = timestamp
+        message.attached_file_id = File.objects.get(file_source=file_source).file_id
         message.save()
+
+        # uf = File.objects.get(file_source=file_source)
+        # uf.message = message
+        # uf.save()
 
         # Send message to room group
         async_to_sync(self.channel_layer.group_send)(
@@ -92,6 +97,7 @@ class ChatConsumer(WebsocketConsumer):
                 'user_lastname': user.last_name,
                 'message': message_text,
                 'timestamp': timestamp,
+                'file_source': file_source,
             }
         )
 
@@ -102,6 +108,7 @@ class ChatConsumer(WebsocketConsumer):
         user_lastname = event['user_lastname']
         message = event['message']
         timestamp = event['timestamp']
+        file_source = event['file_source']
 
         # Send message to WebSocket
         self.send(text_data=json.dumps({
@@ -110,13 +117,14 @@ class ChatConsumer(WebsocketConsumer):
             'user_lastname': user_lastname,
             'message': message,
             'timestamp': timestamp,
+            'file_source': file_source,
         }))
     
-    def file_message(self, event):
-        _type = event['type']
-        user_firstname = event['user_firstname']
-        user_Lastname = event['user_lastname']
-        uploaded_file = event['uploaded_file']
+    # def file_message(self, event):
+    #     _type = event['type']
+    #     user_firstname = event['user_firstname']
+    #     user_Lastname = event['user_lastname']
+    #     uploaded_file = event['uploaded_file']
 
     def refresh_members_list(self, event):
         _type = event['type']
