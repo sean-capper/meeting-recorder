@@ -18,7 +18,6 @@ def home(request):
     })
 
 def meeting_room(request, meeting_url):
-    print(meeting_url)
     try:
         user = User.objects.get(email=request.user)
     except models.ObjectDoesNotExist:
@@ -91,7 +90,7 @@ def create_meeting(request):
             
         return redirect('meeting:meeting-room', meeting.url)
     else:
-        print("form is invalid")
+         
         return render(request, 'index.html', {
             'create_meeting': form
         })
@@ -107,7 +106,7 @@ def join_meeting(request):
 def history(request):
     if(request.user.is_authenticated):
         meetings_list = Relate.objects.filter(user=request.user)
-        print(meetings_list[0].meeting)
+         
         return render(request, 'history.html', {
             'meetings_list': meetings_list,
         })
@@ -118,7 +117,7 @@ def transcript(request, meeting_id):
     # if the user is signed in, and the user was invited or part of the requested meeting
     if(request.user.is_authenticated and Relate.objects.filter(user=request.user, meeting=meeting_id).exists()):
         message_list = Message.objects.filter(meeting_id=meeting_id).order_by('timestamp')
-        print(message_list)
+         
         return render(request, 'transcript.html', {
             'meeting': Meeting.objects.get(pk=meeting_id),
             'message_list': message_list,
@@ -143,7 +142,7 @@ def load_chat_history(request, meeting_url):
         uf = File.objects.get(file_id=message.attached_file_id) if message.attached_file_id is not None else None
         if(uf):
             file_source = uf.file_source
-            file_extension = '.' + uf.file_type if uf.file_type is not None else ''
+            file_extension = ('.' + uf.file_type) if uf.file_type is not None else ''
             file_name = "{}{}".format(uf.file_name, file_extension)
         else:
             file_source = None
@@ -164,7 +163,7 @@ def load_chat_history(request, meeting_url):
 def upload_file(request, meeting_url):
     form = FileForm(request.POST, request.FILES)
     if(form.is_valid()):
-        print(form.cleaned_data)
+         
         uf = File()
         uf.user = form.cleaned_data['user']
         uf.meeting = form.cleaned_data['meeting']

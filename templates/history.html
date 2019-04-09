@@ -31,7 +31,7 @@
                 <td>{{ meeting.meeting.subject }}</td>
                 <td>{{ meeting.meeting.organizer.first_name }} {{ meeting.meeting.organizer.last_name }}</td>
                 <td>{{ meeting.meeting.start_time }}</td>
-                <td><a class="btn btn-primary" href="/transcript/{{ meeting.meeting.meeting_id }}" role="button">View</a></td>
+                <td><a class="btn btn-dark" href="/transcript/{{ meeting.meeting.meeting_id }}" role="button">View</a></td>
               </tr>
               {% endfor %}
             </tbody>

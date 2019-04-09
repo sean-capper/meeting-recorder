@@ -10,22 +10,22 @@
 {% block content %}
 {% if user.is_authenticated %}
 <div class='container'>
-    <div class='container-fluid chat-container shadow border'>
+    <div class='container-fluid chat-container shadow bg-light'>
         <div class='row'>
             <div id='chat' class="col-sm-10">
                 <ul id='chat-list' class='list-unstyled'>
                 </ul>
             </div>
-            <div class='col-sm-2 border border-bottom-0 border-top-0 border-right-0'>
-                <div class='row border border-top-0 border-left-0 border-right-0 justify-content-center'>
+            <div class='col-sm-2 border-left border-primary'>
+                <div class='row border-bottom border-primary justify-content-center text-primary'>
                     Present
                 </div>
-                <ul id='member-list' class='list-unstyled text-justify py-1 text-center'>
+                <ul id='member-list' class='list-unstyled text-justify py-1 text-center text-primary'>
                     
                 </ul>
             </div>
         </div> <!-- end chat row -->
-        <div class='row  py-2 px-3 bg-primary border border-bottom-0 border-left-0 border-right-0'>
+        <div class='row  py-2 px-3 bg-dark border-top border-primary'>
             <div class='col-sm-10'>
                 <textarea id='chat-box' class='form-control mx-auto' placeholder="Type a message..."></textarea>
             </div>
@@ -88,7 +88,7 @@
     function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp, file_attachment, file_name) {
         var chatList = document.querySelector('#chat-list');
         var message = $('<li></li>', {
-            class: 'message my-3 shadow rounded border container',
+            class: 'message my-3 shadow rounded border container bg-primary',
         });
         var row1 = $('<div></div>', {
             class: 'row border-muted border-bottom py-2'
@@ -119,13 +119,13 @@
         message.append(row1);
         message.append(row2);
 
-        if(file_attachment != 'None') {
+        if(file_attachment !== 'None' && file_attachment) {
             var link = $('<div class="row border-top mt-2 text-right py-1">'+
-                            '<div class="col-12">'+
-                                '<a href="/files/'+file_attachment+'">'+file_name+'</a> '+ 
+                            '<div class="col-12 text-info">'+
+                                '<a class="text-info" href="/files/'+file_attachment+'">'+file_name+'</a> '+ 
                                 '<i class="fas fa-paperclip text-info"></i>'+
                             '</div>'+
-                            '</div>', {}
+                         '</div>', {}
             );
             message.append(link);
         }
@@ -150,6 +150,9 @@
                 json.forEach(message => {
                     create_message(message['user_firstname'], message['user_lastname'], message['message'], '', message['timestamp'], message['file_source'], message['file_name'])
                 })
+                $('#chat').animate({
+                    scrollTop: $('#chat').get(0).scrollHeight
+                }, 250);
             }
         });
     };
@@ -163,9 +166,10 @@
             var message = data['message'];
             var timestamp = data['timestamp'];
             var file_source = data['file_source'];
+            var file_name = data['file_name'];
             
             // create a message object and add it to chat list
-            create_message(user_firstname, user_lastname, message, '', timestamp, file_source);
+            create_message(user_firstname, user_lastname, message, '', timestamp, file_source, file_name);
         }
         // add the new list of members to the memberlist element
         else if(data['type'] == 'refresh_members_list') {
@@ -175,6 +179,9 @@
                 $('#member-list').append('<li>'+member_name+'</li>');
             });
         }
+        $('#chat').animate({
+            scrollTop: $('#chat').get(0).scrollHeight
+        }, 400);
     };
 
     // what happens when the socket connection closes
@@ -194,7 +201,7 @@
         var message = messageInputDom.value;
         var uploaded_file;
         // send the attachment if it exists
-        if(fileName) {
+        if(fileName != null) {
             // an attachment exists, so send it to the server with the message
             var form = $('#file-form');
             var url = $('#file-form').attr('action');
@@ -220,6 +227,7 @@
                     })).toString(),
                     'file_source': response['file_source'],
                 });
+                console.log(response);
                 chatSocket.send(json_message);
             });
         } else {
@@ -238,7 +246,8 @@
             chatSocket.send(json_message);
         }
         messageInputDom.value = '';
-        file_input.val = '';
+        file_input[0].value = null;
+        fileName = null;
     };
     
 </script>
