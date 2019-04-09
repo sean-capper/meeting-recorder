@@ -10,7 +10,7 @@ class Meeting(models.Model):
     subject = models.CharField(max_length=50)
     descripton = models.CharField(max_length=100)
     organizer = models.ForeignKey(User, related_name='user_id_set', on_delete=models.CASCADE)
-    members = models.ManyToManyField(User, null=True, through='Relate', through_fields=('meeting', 'user'))
+    members = models.ManyToManyField(User, through='Relate', through_fields=('meeting', 'user'))
     url = models.CharField(max_length=128, default='DEFAULT', unique=True)
 
     def __str__(self):
@@ -48,20 +48,25 @@ class Relate(models.Model):
     def __str__(self):
         return '%s %s' % (self.user.first_name, self.user.last_name)
 
-class Message(models.Model):
-    message_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE)
-    time = models.TimeField(auto_now_add=True)
-    text = models.CharField(max_length=200)
+
+def get_upload_path(instance, filename):
+    return '{}/{}'.format(instance.meeting.url, filename)
 
 class File(models.Model):
     file_id = models.AutoField(primary_key=True)
+    # message = models.ForeignKey(Message, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE)
     file_name = models.CharField(max_length=100)
-    file_type = models.CharField(max_length=15)
-    file_source = models.FileField(upload_to='files/')
+    file_type = models.CharField(max_length=15, null=True)
+    file_source = models.FileField(upload_to=get_upload_path)
     date_created = models.TimeField(auto_now_add=True)
 
 
+class Message(models.Model):
+    message_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    attached_file = models.ForeignKey(File, on_delete=models.CASCADE, null=True)
+    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE)
+    timestamp = models.TimeField(auto_now_add=True)
+    text = models.CharField(max_length=2000)

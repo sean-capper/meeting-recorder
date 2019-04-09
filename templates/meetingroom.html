@@ -10,63 +10,88 @@
 {% block content %}
 {% if user.is_authenticated %}
 <div class='container'>
-    <div class='container-fluid chat-container bg-light shadow border'>
+    <div class='container-fluid chat-container shadow bg-light'>
         <div class='row'>
             <div id='chat' class="col-sm-10">
                 <ul id='chat-list' class='list-unstyled'>
                 </ul>
             </div>
-            <div class='col-sm-2 border border-bottom-0 border-top-0 border-right-0'>
-                <div class='row border border-top-0 border-left-0 border-right-0 justify-content-center'>
+            <div class='col-sm-2 border-left border-primary'>
+                <div class='row border-bottom border-primary justify-content-center text-primary'>
                     Present
                 </div>
-                <ul id='member-list' class='list-unstyled text-justify py-1 text-center'>
+                <ul id='member-list' class='list-unstyled text-justify py-1 text-center text-primary'>
                     
                 </ul>
             </div>
         </div> <!-- end chat row -->
-        <div class='row  py-2 px-3 bg-primary border border-bottom-0 border-left-0 border-right-0'>
+        <div class='row  py-2 px-3 bg-dark border-top border-primary'>
             <div class='col-sm-10'>
                 <textarea id='chat-box' class='form-control mx-auto' placeholder="Type a message..."></textarea>
             </div>
             <div class='col-sm-2 d-flex mx-auto'>
-                <button id='attachment-chat' type='submit' class='btn btn-primary'>
+                <button id='attachment-btn' class='btn btn-primary'>
                     <i class="fas fa-paperclip fa-2x"></i>
                 </button>
                 <button id='send-chat' class='btn btn-primary'>
                     <i class="fas fa-arrow-circle-right fa-2x"></i>
                 </button>
+                <form id='file-form' action='upload-file/' class='sr-only' method='POST' enctype="multipart/form-data" target='upload_target'>
+                    {% csrf_token %}
+                    <label for="id_user">User</label>
+                    <select name="user" required="" id="id_user">
+                        <option value="{{user.user_id}}" selected></option>
+                    </select>
+
+                    <label for="id_meeting">Meeting</label>
+                    <select name="meeting" required="" id="id_meeting">
+                        <option value="{{meeting_id}}" selected></option>
+                    </select>
+                
+                    <label for="id_file_source">File source</label>
+                    <input type="file" name="file_source" required id="id_file_source">
+                </form>
             </div>
         </div>
     </div>
 </div>
-{% else %}
-
 {% endif %}
 
 <script>
+    const file_input = $('#id_file_source')
+    var fileName = null;
+    var meeting_url = {{ meeting_url }};
+    var meeting_id = {{ meeting_id }};
+
+    $('#attachment-btn').click(function(e) {
+        e.preventDefault();
+        file_input.click();
+    });
+
+    $('#id_file_source').on('change', function(e) {
+        fileName = $('#id_file_source').val();
+    });
+
+
     $('#send-chat').trigger('click');
     $('#chat-box').keydown(function(e) {
         var code = (e.keyCode ? e.keyCode : e.which);
         if(code == 13) {
             e.preventDefault();
             $('#send-chat').click();
-            // $('#chat-box').val('');
             return true;
         }
     });
 
-    var meeting_url = {{ meeting_url }};
-    // var meetingID = {{ meeting_id }};
 
     // create a message that will be displayed in the browser
-    function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp) {
+    function create_message(_user_fname, _user_lname, _message, profile_pic, _timestamp, file_attachment, file_name) {
         var chatList = document.querySelector('#chat-list');
         var message = $('<li></li>', {
-            class: 'message my-3 p-4 shadow rounded border',
+            class: 'message my-3 shadow rounded border container bg-primary',
         });
         var row1 = $('<div></div>', {
-            class: 'row border border-muted border-top-0 border-right-0 border-left-0 pb-2 mb-2'
+            class: 'row border-muted border-bottom py-2'
         });
         var user_info_div = $('<div></div>', {
             class: 'user-info col-3 d-flex',
@@ -81,10 +106,11 @@
         var time_stamp = $('<div>' + _timestamp + '</div>').addClass('offset-7 col-2 chat-time text-right text-muted font-italic font-weight-light pull-right');
         
         var row2 = $('<div></div>', {
-            class: 'row',
+            class: 'row py-2',
         });
-        var message_body = $('<div>' + _message + '</div>').addClass('message-body col-12');
 
+        var message_body = $('<div>' + _message + '</div>').addClass('message-body col-12');
+3 
         user_info_div.append(profile_pic);
         user_info_div.append(profile_name);
         row1.append(user_info_div)
@@ -92,6 +118,18 @@
         row2.append(message_body);
         message.append(row1);
         message.append(row2);
+
+        if(file_attachment !== 'None' && file_attachment) {
+            var link = $('<div class="row border-top mt-2 text-right py-1">'+
+                            '<div class="col-12 text-info">'+
+                                '<a class="text-info" href="/files/'+file_attachment+'">'+file_name+'</a> '+ 
+                                '<i class="fas fa-paperclip text-info"></i>'+
+                            '</div>'+
+                         '</div>', {}
+            );
+            message.append(link);
+        }
+
         $('#chat-list').append(message);
     }
 
@@ -99,6 +137,25 @@
     var chatSocket = new WebSocket(
         'ws://' + window.location.host +
         '/ws/m/' + meeting_url + '/');
+    
+    chatSocket.onopen = function(e) {
+        var data = {
+            'meeting_id': meeting_id,
+        }
+        $.ajax({
+            url: 'load-history',
+            type: 'GET',
+            data: data,
+            success: function(json) {
+                json.forEach(message => {
+                    create_message(message['user_firstname'], message['user_lastname'], message['message'], '', message['timestamp'], message['file_source'], message['file_name'])
+                })
+                $('#chat').animate({
+                    scrollTop: $('#chat').get(0).scrollHeight
+                }, 250);
+            }
+        });
+    };
 
     // happens whenever the socket recieves a message
     chatSocket.onmessage = function (e) {
@@ -108,8 +165,11 @@
             var user_lastname = data['user_lastname'];
             var message = data['message'];
             var timestamp = data['timestamp'];
+            var file_source = data['file_source'];
+            var file_name = data['file_name'];
+            
             // create a message object and add it to chat list
-            create_message(user_firstname, user_lastname, message, '', timestamp);
+            create_message(user_firstname, user_lastname, message, '', timestamp, file_source, file_name);
         }
         // add the new list of members to the memberlist element
         else if(data['type'] == 'refresh_members_list') {
@@ -119,6 +179,9 @@
                 $('#member-list').append('<li>'+member_name+'</li>');
             });
         }
+        $('#chat').animate({
+            scrollTop: $('#chat').get(0).scrollHeight
+        }, 400);
     };
 
     // what happens when the socket connection closes
@@ -132,28 +195,62 @@
             document.querySelector('#send-chat').click();
         }
     }
-
+    
     document.querySelector('#send-chat').onclick = function (e) {
         var messageInputDom = document.querySelector('#chat-box');
         var message = messageInputDom.value;
-        chatSocket.send(JSON.stringify({
-            'type': 'chat_message',
-            'meetingID': "{{ meeting_id }}",
-            'userID': "{{ user.user_id }}",
-            'message': message,
-            'timestamp': (new Date().toLocaleTimeString('en-US', {
-                hour12: true,
-                hour: "numeric",
-                minute: "numeric"
-            })).toString(),
-        }));
-
+        var uploaded_file;
+        // send the attachment if it exists
+        if(fileName != null) {
+            // an attachment exists, so send it to the server with the message
+            var form = $('#file-form');
+            var url = $('#file-form').attr('action');
+            var data = new FormData(form[0]);
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: data,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function(response) {}
+            }).done(function(response){
+                var json_message = JSON.stringify({
+                    'type': 'chat_message',
+                    'meetingID': "{{ meeting_id }}",
+                    'userID': "{{ user.user_id }}",
+                    'message': message,
+                    'timestamp': (new Date().toLocaleTimeString('en-US', {
+                        hour12: true,
+                        hour: "numeric",
+                        minute: "numeric"
+                    })).toString(),
+                    'file_source': response['file_source'],
+                });
+                console.log(response);
+                chatSocket.send(json_message);
+            });
+        } else {
+            var json_message = JSON.stringify({
+                'type': 'chat_message',
+                'meetingID': "{{ meeting_id }}",
+                'userID': "{{ user.user_id }}",
+                'message': message,
+                'timestamp': (new Date().toLocaleTimeString('en-US', {
+                    hour12: true,
+                    hour: "numeric",
+                    minute: "numeric"
+                })).toString(),
+                'file_source': null,
+            });
+            chatSocket.send(json_message);
+        }
         messageInputDom.value = '';
+        file_input[0].value = null;
+        fileName = null;
     };
-
+    
 </script>
-
-
 </div>
 
 {% endblock %}

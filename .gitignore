@@ -1,5 +1,7 @@
 # Created by https://www.gitignore.io
 .vscode
+files/
+notes
 
 ### OSX ###
 .DS_Store

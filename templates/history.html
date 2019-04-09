@@ -6,15 +6,15 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center text-light">
     <h1 class="display-4">Meeting History</h1>
     <p class="lead">Click the View button next to a meeting
         to view the transcript!
     </p>
 </div>
 <div class="container">
-    <!-- <div class='table-responsive-md'>
-    <table class="table table-bordered text-center">
+    <div class='table-responsive-md'>
+    <table class="table table-bordered text-center text-light">
             <thead>
               <tr>
                 <th scope="col">Meeting ID</th>
@@ -31,31 +31,12 @@
                 <td>{{ meeting.meeting.subject }}</td>
                 <td>{{ meeting.meeting.organizer.first_name }} {{ meeting.meeting.organizer.last_name }}</td>
                 <td>{{ meeting.meeting.start_time }}</td>
-                <td><a class="btn btn-primary" href="/transcript/{{ meeting.meeting.meeting_id }}" role="button">View</a></td>
+                <td><a class="btn btn-dark" href="/transcript/{{ meeting.meeting.meeting_id }}" role="button">View</a></td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
-    </div> -->
-
-    {% for meeting in meetings_list %}
-    <div class="row shadow mb-5 bg-light rounded border border-secondary mx-md-n3 ">
-        <div class="col-sm-3 py-3 px-md-3 border-right border-secondary">
-            {{ meeting.meeting.subject }}
-        </div>
-        <div class="col-sm-3 py-3 px-md-3 border-right border-secondary">
-            {{ meeting.meeting.organizer.first_name }} {{ meeting.meeting.organizer.last_name }}
-        </div>
-        <div class="col-sm-3 py-3 px-md-3 border-right border-secondary">
-            {{ meeting.meeting.start_time }}
-        </div>
-        <div class="col-sm-3">
-            <div class='d-flex my-auto'>
-                <a class="btn btn-primary" href="/transcript/{{ meeting.meeting.meeting_id }}" role="button">View</a>
-            </div>
-        </div>
     </div>
-    {% endfor %}
 </div>
 {% endif %}
 </div>
