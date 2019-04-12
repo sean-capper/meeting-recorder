@@ -33,12 +33,16 @@ def meeting_room(request, meeting_url):
     except models.ObjectDoesNotExist:
         is_invited = None
 
-    # if the meeting exists, the user is logged in, and the user was invited to this specific meeting, return the meeting room view
-    if(is_invited):
-        return render(request, 'meetingroom.html', {
-            'meeting_id': mark_safe(json.dumps(meeting.meeting_id)),
-            'meeting_url': mark_safe(json.dumps(meeting_url)),
-        })
+    if(meeting.end_time):
+        session_message.error(request, 'This meeting has already ended! View the transcript via the history page.')
+    else:
+        # if the meeting exists, the user is logged in, and the user was invited to this specific meeting, return the meeting room view
+        if(is_invited):
+            return render(request, 'meetingroom.html', {
+                'meeting_id': mark_safe(json.dumps(meeting.meeting_id)),
+                'meeting_url': mark_safe(json.dumps(meeting_url)),
+                'organizer_id': int(meeting.organizer_id),
+            })
     # if the meeting does not exist, create a different error
     if(meeting is None):
         session_message.error(request, 'This meeting does not exist!')

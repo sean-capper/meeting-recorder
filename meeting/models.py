@@ -12,6 +12,7 @@ class Meeting(models.Model):
     organizer = models.ForeignKey(User, related_name='user_id_set', on_delete=models.CASCADE)
     members = models.ManyToManyField(User, through='Relate', through_fields=('meeting', 'user'))
     url = models.CharField(max_length=128, default='DEFAULT', unique=True)
+    duration = models.CharField(max_length=128, null=True)
 
     def __str__(self):
         return 'meeting/%s' % self.url
