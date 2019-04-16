@@ -108,6 +108,9 @@ class ChatConsumer(WebsocketConsumer):
                 }
             )
         elif(_type == 'start_meeting'):
+            meeting = Meeting.objects.get(pk=int(text_data_json['meetingID']))
+            meeting.started = True
+            meeting.save()
             async_to_sync(self.channel_layer.group_send)(
                 self.room_group_name,
                 {

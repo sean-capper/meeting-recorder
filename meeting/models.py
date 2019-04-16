@@ -13,6 +13,7 @@ class Meeting(models.Model):
     members = models.ManyToManyField(User, through='Relate', through_fields=('meeting', 'user'))
     url = models.CharField(max_length=128, default='DEFAULT', unique=True)
     duration = models.CharField(max_length=128, null=True)
+    started = models.BooleanField(default=False, null=False)
 
     def __str__(self):
         return 'meeting/%s' % self.url

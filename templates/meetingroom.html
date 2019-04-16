@@ -17,14 +17,14 @@
                 <button type='button' id='start-meeting' class='btn btn-lg btn-block btn-success text-light'>Start Meeting</button>
             </div>
             <div id='timer' class='col-sm-4 p-2 my-auto'>
-                00:00
+                0 hrs 0 mins
             </div>
             <div class='col-sm-4 p-2'>
                 <button disabled='false' type='button' id='end-meeting' class='btn btn-lg btn-block btn-danger'>End Meeting</button>
             </div>
             {% else %}
             <div id='timer' class='offset-4 col-sm-4 p-2 my-auto'>
-                00:00
+                0 hrs 0 mins
             </div>
             {% endif %}
         </div>
@@ -72,6 +72,14 @@
                 </form>
             </div>
         </div>
+
+        <div class='row pb-2 px-3 bg-dark'>
+            <div class='col-sm-10'>
+                Attachment: 
+                <span id='attachment-name' class='text-info font-italic'></span>
+                <button id='remove-attachment' class='sr-only ml-1 btn btn-sm btn-outline-light border-0'><i class="fas fa-times"></i></button>
+            </div>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -87,8 +95,18 @@
         file_input.click();
     });
 
+    $('#remove-attachment').click(function(e) {
+        file_input[0].value = null;
+        fileName = null;
+        $('#attachment-name').html('');
+        $('#remove-attachment').toggleClass('sr-only')
+    });
+
     $('#id_file_source').on('change', function(e) {
         fileName = $('#id_file_source').val();
+        fileName = fileName.split("\\")
+        $('#attachment-name').html(fileName[2]);
+        $('#remove-attachment').toggleClass('sr-only')
     });
 
 
@@ -162,11 +180,32 @@
             'meeting_id': meeting_id,
         }
         $.ajax({
-            url: 'load-history',
+            url: 'load',
             type: 'GET',
             data: data,
             success: function(json) {
-                json.forEach(message => {
+                console.log(json['meeting_info'][0])
+                if(json['meeting_info'][0].started == true) {
+                    {% if user.user_id == organizer_id %}
+                    $('#start-meeting').prop('disabled', true);
+                    $('#end-meeting').prop('disabled', false);
+                    $('#chat-box').prop('disabled', false);
+                    $('#attachment-btn').prop('disabled', false);
+                    $('#send-chat').prop('disabled', false);
+                    meeting_started = true;
+                    var time = json['meeting_info'][0].duration.split(' ');
+                    hours = time[0];
+                    minutes = time[2];
+                    console.log(time);
+                    console.log(timer);
+                    {% else %}
+                    $('#chat-box').prop('disabled', false);
+                    $('#attachment-btn').prop('disabled', false);
+                    $('#send-chat').prop('disabled', false);
+                    {% endif %}
+                    $('#timer').html(json['meeting_info'][0].duration);
+                }
+                json['messages'].forEach(message => {
                     create_message(message['user_firstname'], message['user_lastname'], message['message'], '', message['timestamp'], message['file_source'], message['file_name'])
                 })
                 $('#chat').animate({
@@ -205,10 +244,12 @@
             $('#send-chat').prop('disabled', false);
         }
         else if(data['type'] == 'end_meeting') {
+            $('#chat-box').prop('disabled', true);
+            $('#attachment-btn').prop('disabled', true);
+            $('#send-chat').prop('disabled', true);
             alert('this meeting has ended.');
         }
         else if(data['type'] == 'refresh_timer') {
-            console.log(data['timer']);
             var time = data['timer'];
             $('#timer').html(time);
         }
@@ -282,6 +323,7 @@
         messageInputDom.value = '';
         file_input[0].value = null;
         fileName = null;
+        $('#attachment-name').html('');
     };
     
     {% if user.user_id == organizer_id %}
