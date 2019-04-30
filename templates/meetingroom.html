@@ -10,6 +10,25 @@
 {% block content %}
 {% if user.is_authenticated %}
 <div class='container'>
+    <div class='container-fluid my-2'>
+        <div class='row text-center text-light'>
+        {% if user.user_id == organizer_id %}
+            <div class='col-sm-4 p-2'>
+                <button type='button' id='start-meeting' class='btn btn-lg btn-block btn-success text-light'>Start Meeting</button>
+            </div>
+            <div id='timer' class='col-sm-4 p-2 my-auto'>
+                0 hrs 0 mins
+            </div>
+            <div class='col-sm-4 p-2'>
+                <button disabled='false' type='button' id='end-meeting' class='btn btn-lg btn-block btn-danger'>End Meeting</button>
+            </div>
+            {% else %}
+            <div id='timer' class='offset-4 col-sm-4 p-2 my-auto'>
+                0 hrs 0 mins
+            </div>
+            {% endif %}
+        </div>
+    </div>
     <div class='container-fluid chat-container shadow bg-light'>
         <div class='row'>
             <div id='chat' class="col-sm-10">
@@ -27,13 +46,13 @@
         </div> <!-- end chat row -->
         <div class='row  py-2 px-3 bg-dark border-top border-primary'>
             <div class='col-sm-10'>
-                <textarea id='chat-box' class='form-control mx-auto' placeholder="Type a message..."></textarea>
+                <textarea disabled id='chat-box' class='form-control mx-auto' placeholder="Type a message..."></textarea>
             </div>
             <div class='col-sm-2 d-flex mx-auto'>
-                <button id='attachment-btn' class='btn btn-primary'>
+                <button disabled id='attachment-btn' class='btn btn-primary'>
                     <i class="fas fa-paperclip fa-2x"></i>
                 </button>
-                <button id='send-chat' class='btn btn-primary'>
+                <button disabled id='send-chat' class='btn btn-primary'>
                     <i class="fas fa-arrow-circle-right fa-2x"></i>
                 </button>
                 <form id='file-form' action='upload-file/' class='sr-only' method='POST' enctype="multipart/form-data" target='upload_target'>
@@ -53,6 +72,14 @@
                 </form>
             </div>
         </div>
+
+        <div class='row pb-2 px-3 bg-dark'>
+            <div class='col-sm-10'>
+                Attachment: 
+                <span id='attachment-name' class='text-info font-italic'></span>
+                <button id='remove-attachment' class='sr-only ml-1 btn btn-sm btn-outline-light border-0'><i class="fas fa-times"></i></button>
+            </div>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -68,8 +95,18 @@
         file_input.click();
     });
 
+    $('#remove-attachment').click(function(e) {
+        file_input[0].value = null;
+        fileName = null;
+        $('#attachment-name').html('');
+        $('#remove-attachment').toggleClass('sr-only')
+    });
+
     $('#id_file_source').on('change', function(e) {
         fileName = $('#id_file_source').val();
+        fileName = fileName.split("\\")
+        $('#attachment-name').html(fileName[2]);
+        $('#remove-attachment').toggleClass('sr-only')
     });
 
 
@@ -143,11 +180,32 @@
             'meeting_id': meeting_id,
         }
         $.ajax({
-            url: 'load-history',
+            url: 'load',
             type: 'GET',
             data: data,
             success: function(json) {
-                json.forEach(message => {
+                console.log(json['meeting_info'][0])
+                if(json['meeting_info'][0].started == true) {
+                    {% if user.user_id == organizer_id %}
+                    $('#start-meeting').prop('disabled', true);
+                    $('#end-meeting').prop('disabled', false);
+                    $('#chat-box').prop('disabled', false);
+                    $('#attachment-btn').prop('disabled', false);
+                    $('#send-chat').prop('disabled', false);
+                    meeting_started = true;
+                    var time = json['meeting_info'][0].duration.split(' ');
+                    hours = time[0];
+                    minutes = time[2];
+                    console.log(time);
+                    console.log(timer);
+                    {% else %}
+                    $('#chat-box').prop('disabled', false);
+                    $('#attachment-btn').prop('disabled', false);
+                    $('#send-chat').prop('disabled', false);
+                    {% endif %}
+                    $('#timer').html(json['meeting_info'][0].duration);
+                }
+                json['messages'].forEach(message => {
                     create_message(message['user_firstname'], message['user_lastname'], message['message'], '', message['timestamp'], message['file_source'], message['file_name'])
                 })
                 $('#chat').animate({
@@ -179,6 +237,24 @@
                 $('#member-list').append('<li>'+member_name+'</li>');
             });
         }
+        {% if user.user_id != organizer_id %}
+        else if(data['type'] == 'start_meeting') {
+            $('#chat-box').prop('disabled', false);
+            $('#attachment-btn').prop('disabled', false);
+            $('#send-chat').prop('disabled', false);
+        }
+        else if(data['type'] == 'end_meeting') {
+            $('#chat-box').prop('disabled', true);
+            $('#attachment-btn').prop('disabled', true);
+            $('#send-chat').prop('disabled', true);
+            alert('this meeting has ended.');
+        }
+        else if(data['type'] == 'refresh_timer') {
+            var time = data['timer'];
+            $('#timer').html(time);
+        }
+        {% endif %}
+
         $('#chat').animate({
             scrollTop: $('#chat').get(0).scrollHeight
         }, 400);
@@ -227,7 +303,6 @@
                     })).toString(),
                     'file_source': response['file_source'],
                 });
-                console.log(response);
                 chatSocket.send(json_message);
             });
         } else {
@@ -248,8 +323,58 @@
         messageInputDom.value = '';
         file_input[0].value = null;
         fileName = null;
+        $('#attachment-name').html('');
     };
     
+    {% if user.user_id == organizer_id %}
+    var meeting_started = false;
+    var minutes = 0;
+    var hours = 0;
+    $('#start-meeting').click(function(e) {
+        e.preventDefault();
+        $('#start-meeting').prop('disabled', true);
+        $('#end-meeting').prop('disabled', false);
+        $('#chat-box').prop('disabled', false);
+        $('#attachment-btn').prop('disabled', false);
+        $('#send-chat').prop('disabled', false);
+        chatSocket.send(JSON.stringify({
+            'type': 'start_meeting',
+            'meetingID': "{{ meeting_id }}",
+            'userID': "{{ user.user_id }}",
+        }));
+        meeting_started = true;
+    });
+    $('#end-meeting').click(function(e) {
+        e.preventDefault();
+        $('#end-meeting').prop('disabled', true);
+        $('#chat-box').prop('disabled', true);
+        $('#attachment-btn').prop('disabled', true);
+        $('#send-chat').prop('disabled', true);
+        chatSocket.send(JSON.stringify({
+            'type': 'end_meeting',
+            'meetingID': "{{ meeting_id }}",
+            'userID': "{{ user.user_id }}",
+        }));
+        meeting_started = false;
+    });
+    
+    var timer = setInterval(function(){
+        if(meeting_started){
+            minutes += 1;
+            if(minutes >= 60) {
+                hours++;
+                minutes = 0;
+            }
+            $('#timer').html(hours + ' hrs ' + minutes + ' mins');
+            chatSocket.send(JSON.stringify({
+            'type': 'refresh_timer',
+            'meetingID': "{{ meeting_id }}",
+            'userID': "{{ user.user_id }}",
+            'timer': hours + ' hrs ' + minutes + ' mins',
+            }));
+        }
+    }, 60000);
+    {% endif %}
 </script>
 </div>
 
