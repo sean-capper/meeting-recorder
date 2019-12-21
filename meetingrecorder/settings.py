@@ -78,11 +78,11 @@ WSGI_APPLICATION = 'meetingrecorder.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'senior_project',
-        'USER': 'cs490',
-        'PASSWORD': 'c2VuaW9yIHByb2plY3Q=',
-        'HOST': '192.241.143.158',
-        'PORT': '3306',
+        'NAME': 'redacted_db_name',
+        'USER': 'redacted_db_user',
+        'PASSWORD': 'redacted_db_password=',
+        'HOST': 'redacted_db_host',
+        'PORT': 'redacted_db_port',
     }
 }
 
@@ -135,7 +135,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('192.241.143.158', 6379)],
+            "hosts": [('redacted_ip', 6379)],
         },
     },
 }
